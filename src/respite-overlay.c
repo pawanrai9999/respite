@@ -84,3 +84,18 @@ respite_overlay_get_monitor (RespiteOverlay *self)
 
 	return self->monitor;
 }
+
+/* Update the countdown to @seconds left in the break, formatted MM:SS. The
+ * coordinator drives this from the timer's ::tick signal. */
+void
+respite_overlay_set_remaining (RespiteOverlay *self,
+                               guint           seconds)
+{
+	g_autofree char *text = NULL;
+
+	g_return_if_fail (RESPITE_IS_OVERLAY (self));
+
+	/* TRANSLATORS: shown on the break overlay; %02u:%02u is MM:SS remaining. */
+	text = g_strdup_printf (_("Break for %02u:%02u"), seconds / 60, seconds % 60);
+	gtk_label_set_label (self->countdown_label, text);
+}

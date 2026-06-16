@@ -28,8 +28,10 @@ G_BEGIN_DECLS
 
 G_DECLARE_FINAL_TYPE (RespiteOverlay, respite_overlay, RESPITE, OVERLAY, GtkWindow)
 
-RespiteOverlay *respite_overlay_new         (GtkApplication *application,
-                                             GdkMonitor     *monitor);
-GdkMonitor     *respite_overlay_get_monitor (RespiteOverlay *self);
+RespiteOverlay *respite_overlay_new           (GtkApplication *application,
+                                               GdkMonitor     *monitor);
+GdkMonitor     *respite_overlay_get_monitor   (RespiteOverlay *self);
+void            respite_overlay_set_remaining (RespiteOverlay *self,
+                                               guint           seconds);
 
 G_END_DECLS
