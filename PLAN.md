@@ -2,7 +2,7 @@
 
 Break-reminder application for the GNOME desktop (C + GTK4 + libadwaita, Wayland, Flatpak).
 
-**Current status:** Phases 1 (settings foundation), 2 (timer engine), and 3 (process model & daemon) complete; next up is Phase 4 (break overlay).
+**Current status:** Phases 1 (settings foundation), 2 (timer engine), 3 (process model & daemon), and 4 (break overlay) complete; next up is Phase 5 (postpone mechanism).
 
 ## Architecture Decisions
 
