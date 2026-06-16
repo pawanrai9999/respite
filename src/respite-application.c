@@ -470,11 +470,15 @@ respite_application_about_action (GSimpleAction *action,
 	window = gtk_application_get_active_window (GTK_APPLICATION (self));
 
 	adw_show_about_dialog (GTK_WIDGET (window),
-	                       "application-name", "Respite",
+	                       "application-name", _("Respite"),
 	                       "application-icon", "com.texoviva.respite",
 	                       "developer-name", "pawan",
+	                       "comments", _("A break reminder that blacks out the screen so you actually rest."),
+	                       "website", "https://github.com/texoviva/respite",
+	                       "issue-url", "https://github.com/texoviva/respite/issues",
+	                       "license-type", GTK_LICENSE_AGPL_3_0,
 	                       "translator-credits", _("translator-credits"),
-	                       "version", "0.1.0",
+	                       "version", PACKAGE_VERSION,
 	                       "developers", developers,
 	                       "copyright", "© 2026 pawan",
 	                       NULL);

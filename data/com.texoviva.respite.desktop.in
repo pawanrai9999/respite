@@ -1,10 +1,11 @@
 [Desktop Entry]
 Name=Respite
+Comment=Take regular breaks from the screen
 Exec=respite
 Icon=com.texoviva.respite
 Terminal=false
 Type=Application
-Categories=Utility;
-Keywords=GTK;
+Categories=Utility;GTK;
+Keywords=break;timer;rest;health;pomodoro;eyes;
 StartupNotify=true
 DBusActivatable=true
