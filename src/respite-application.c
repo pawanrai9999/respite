@@ -22,6 +22,7 @@
 #include <glib/gi18n.h>
 
 #include "respite-application.h"
+#include "respite-background.h"
 #include "respite-overlay.h"
 #include "respite-timer.h"
 #include "respite-window.h"
@@ -273,6 +274,9 @@ respite_application_start_daemon (RespiteApplication *self)
 
 	g_application_hold (G_APPLICATION (self));
 	self->held = TRUE;
+
+	/* Ask the portal to let us keep running with no window (sandbox only). */
+	respite_background_request_run_in_background ();
 
 	respite_timer_start (self->timer);
 }
