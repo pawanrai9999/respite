@@ -33,4 +33,16 @@ gboolean respite_background_is_sandboxed              (void);
  * needs no such permission. */
 void     respite_background_request_run_in_background (void);
 
+/* Reports the autostart state actually achieved after a set-autostart request,
+ * which can differ from what was asked when the portal denies the request. */
+typedef void (*RespiteBackgroundAutostartCb)         (gboolean enabled,
+                                                      gpointer user_data);
+
+/* Enable or disable launching `respite --daemon` at login. Routes through the
+ * Background portal under Flatpak and an XDG autostart .desktop file otherwise.
+ * @callback (may be %NULL) reports the state that ended up in effect. */
+void     respite_background_set_autostart            (gboolean                     enabled,
+                                                      RespiteBackgroundAutostartCb callback,
+                                                      gpointer                     user_data);
+
 G_END_DECLS

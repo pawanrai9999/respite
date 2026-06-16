@@ -46,12 +46,15 @@ respite_background_is_sandboxed (void)
 
 /* An in-flight RequestBackground call: it owns the subscription on the
  * request's Response signal and is freed once that reply arrives (or the call
- * fails). */
+ * fails). When @callback is set the caller wants the granted autostart state
+ * reported back; otherwise this is a plain run-in-background request. */
 typedef struct
 {
-	GDBusConnection *connection;
-	char            *request_path;
-	gulong           response_id;
+	GDBusConnection             *connection;
+	char                        *request_path;
+	gulong                       response_id;
+	RespiteBackgroundAutostartCb callback;
+	gpointer                     user_data;
 } PortalRequest;
 
 static void
@@ -65,7 +68,20 @@ portal_request_free (PortalRequest *req)
 	g_free (req);
 }
 
-/* The portal answered: log the outcome and tear the request down. */
+/* Report the outcome to an autostart caller (if any) and tear the request down.
+ * @granted_autostart is meaningful only when the request actually succeeded. */
+static void
+portal_request_finish (PortalRequest *req,
+                       gboolean       granted_autostart)
+{
+	if (req->callback != NULL)
+		req->callback (granted_autostart, req->user_data);
+
+	portal_request_free (req);
+}
+
+/* The portal answered. For an autostart request, report whether autostart was
+ * actually granted; for a plain run-in-background request, just log a denial. */
 static void
 on_portal_response (GDBusConnection *connection,
                     const char      *sender_name,
@@ -78,17 +94,17 @@ on_portal_response (GDBusConnection *connection,
 	PortalRequest *req = user_data;
 	guint32 response = 0;
 	g_autoptr(GVariant) results = NULL;
-	gboolean background = FALSE;
+	gboolean autostart = FALSE;
 
 	g_variant_get (parameters, "(u@a{sv})", &response, &results);
 
 	if (response == 0 && results != NULL)
-		g_variant_lookup (results, "background", "b", &background);
+		g_variant_lookup (results, "autostart", "b", &autostart);
 
 	if (response != 0)
 		g_message ("Background portal request was denied or cancelled");
 
-	portal_request_free (req);
+	portal_request_finish (req, response == 0 && autostart);
 }
 
 /* The RequestBackground method returned its request handle. Modern portals
@@ -109,7 +125,7 @@ on_request_sent (GObject      *source,
 	if (reply == NULL)
 	{
 		g_warning ("Background portal request failed: %s", error->message);
-		portal_request_free (req);
+		portal_request_finish (req, FALSE);
 		return;
 	}
 
@@ -130,11 +146,16 @@ on_request_sent (GObject      *source,
 }
 
 /* Issue a RequestBackground call. @reason is the user-visible justification the
- * portal shows. Subscribes to the predicted Response path before calling so the
- * reply is never missed. Silently does nothing if there is no D-Bus connection
- * to reach the portal over. */
+ * portal shows. When @set_autostart is TRUE the call also registers (or, with
+ * @autostart_enabled FALSE, removes) an autostart entry launching the daemon,
+ * and @callback reports the granted state. Subscribes to the predicted Response
+ * path before calling so the reply is never missed. */
 static void
-respite_portal_request_background (const char *reason)
+respite_portal_request_background (const char                   *reason,
+                                   gboolean                      set_autostart,
+                                   gboolean                      autostart_enabled,
+                                   RespiteBackgroundAutostartCb  callback,
+                                   gpointer                      user_data)
 {
 	GApplication *app = g_application_get_default ();
 	GDBusConnection *connection = NULL;
@@ -151,12 +172,18 @@ respite_portal_request_background (const char *reason)
 	if (connection == NULL)
 	{
 		g_warning ("No D-Bus connection; cannot reach the Background portal");
+		if (callback != NULL)
+			callback (FALSE, user_data);
 		return;
 	}
 
 	unique_name = g_dbus_connection_get_unique_name (connection);
 	if (unique_name == NULL)
+	{
+		if (callback != NULL)
+			callback (FALSE, user_data);
 		return;
+	}
 
 	/* The request object path the portal will use is derived from our bus name
 	 * (with the leading ':' dropped and '.' turned into '_') and a token we
@@ -167,6 +194,8 @@ respite_portal_request_background (const char *reason)
 
 	req = g_new0 (PortalRequest, 1);
 	req->connection = g_object_ref (connection);
+	req->callback = callback;
+	req->user_data = user_data;
 	req->request_path = g_strdup_printf ("%s/request/%s/%s",
 	                                     PORTAL_OBJECT_PATH, sender, token);
 	req->response_id =
@@ -181,6 +210,18 @@ respite_portal_request_background (const char *reason)
 	                       g_variant_new_string (token));
 	g_variant_builder_add (&options, "{sv}", "reason",
 	                       g_variant_new_string (reason));
+
+	if (set_autostart)
+	{
+		/* Launch the daemon directly at login rather than via D-Bus activation,
+		 * which would start the app in its windowed mode instead. */
+		static const char * const commandline[] = { "respite", "--daemon", NULL };
+
+		g_variant_builder_add (&options, "{sv}", "autostart",
+		                       g_variant_new_boolean (autostart_enabled));
+		g_variant_builder_add (&options, "{sv}", "commandline",
+		                       g_variant_new_strv (commandline, -1));
+	}
 
 	g_dbus_connection_call (connection,
 	                        PORTAL_BUS_NAME, PORTAL_OBJECT_PATH, PORTAL_BACKGROUND,
@@ -200,5 +241,25 @@ respite_background_request_run_in_background (void)
 		return;
 
 	respite_portal_request_background (
-		_("Respite keeps reminding you to take breaks while running in the background."));
+		_("Respite keeps reminding you to take breaks while running in the background."),
+		FALSE, FALSE, NULL, NULL);
+}
+
+void
+respite_background_set_autostart (gboolean                     enabled,
+                                  RespiteBackgroundAutostartCb callback,
+                                  gpointer                     user_data)
+{
+	if (respite_background_is_sandboxed ())
+	{
+		respite_portal_request_background (
+			_("Respite starts at login so it can remind you to take breaks."),
+			TRUE, enabled, callback, user_data);
+		return;
+	}
+
+	/* Native (non-sandboxed) autostart is handled in Phase 6.5; for now assume
+	 * the requested state took effect so the preference is not bounced back. */
+	if (callback != NULL)
+		callback (enabled, user_data);
 }
