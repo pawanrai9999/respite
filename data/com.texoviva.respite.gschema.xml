@@ -1,5 +1,40 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <schemalist gettext-domain="respite">
 	<schema id="com.texoviva.respite" path="/com/texoviva/respite/">
+		<key name="work-interval" type="u">
+			<default>1500</default>
+			<range min="60" max="14400"/>
+			<summary>Work interval in seconds</summary>
+			<description>How long the user works before a break begins. Defaults to 25 minutes.</description>
+		</key>
+		<key name="break-duration" type="u">
+			<default>300</default>
+			<range min="10" max="3600"/>
+			<summary>Break duration in seconds</summary>
+			<description>How long each break lasts. Defaults to 5 minutes.</description>
+		</key>
+		<key name="postpone-allowance" type="u">
+			<default>3</default>
+			<range min="0" max="20"/>
+			<summary>Number of postponements allowed per cycle</summary>
+			<description>How many times a break may be postponed before it must be taken. Zero disables postponing.</description>
+		</key>
+		<key name="postpone-duration" type="u">
+			<default>120</default>
+			<range min="30" max="1800"/>
+			<summary>Postpone duration in seconds</summary>
+			<description>How long a break is delayed each time it is postponed. Defaults to 2 minutes.</description>
+		</key>
+		<key name="pre-break-warning" type="u">
+			<default>30</default>
+			<range min="0" max="600"/>
+			<summary>Pre-break warning in seconds</summary>
+			<description>How long before a break to show the warning notification. Zero disables the warning.</description>
+		</key>
+		<key name="autostart" type="b">
+			<default>false</default>
+			<summary>Start Respite automatically on login</summary>
+			<description>Whether Respite runs as a background daemon when the user logs in.</description>
+		</key>
 	</schema>
 </schemalist>
