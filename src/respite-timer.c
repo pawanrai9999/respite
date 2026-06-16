@@ -50,6 +50,10 @@ struct _RespiteTimer
 	 * by respite_timer_postpone(). */
 	guint              postpones_remaining;
 
+	/* Seconds before the break at which to fire ::warning, read from
+	 * pre-break-warning at the start of each WORKING phase. Zero disables it. */
+	guint              warning_seconds;
+
 	guint              tick_source_id;
 };
 
@@ -65,6 +69,7 @@ enum
 {
 	SIGNAL_TICK,
 	SIGNAL_STATE_CHANGED,
+	SIGNAL_WARNING,
 	SIGNAL_BREAK_STARTED,
 	SIGNAL_BREAK_ENDED,
 	N_SIGNALS
@@ -116,8 +121,10 @@ begin_working (RespiteTimer *self)
 	self->deadline = g_get_monotonic_time () + (gint64) work_interval * G_USEC_PER_SEC;
 	self->remaining = work_interval;
 
-	/* Each work cycle starts with a fresh postpone allowance. */
+	/* Each work cycle starts with a fresh postpone allowance and warning
+	 * threshold, captured here so live settings changes apply next cycle. */
 	self->postpones_remaining = g_settings_get_uint (self->settings, "postpone-allowance");
+	self->warning_seconds = g_settings_get_uint (self->settings, "pre-break-warning");
 
 	set_state (self, RESPITE_TIMER_STATE_WORKING);
 	g_signal_emit (self, signals[SIGNAL_TICK], 0, self->remaining);
@@ -159,6 +166,22 @@ advance_phase (RespiteTimer *self)
 	}
 }
 
+/* If the work countdown has crossed into the pre-break warning window, move
+ * WORKING -> WARNING and fire ::warning once, carrying the postpones still
+ * available so the UI can offer (or withhold) a Postpone action. */
+static void
+maybe_enter_warning (RespiteTimer *self)
+{
+	if (self->state != RESPITE_TIMER_STATE_WORKING)
+		return;
+
+	if (self->warning_seconds == 0 || self->remaining > self->warning_seconds)
+		return;
+
+	set_state (self, RESPITE_TIMER_STATE_WARNING);
+	g_signal_emit (self, signals[SIGNAL_WARNING], 0, self->postpones_remaining);
+}
+
 static gboolean
 tick_cb (gpointer user_data)
 {
@@ -167,7 +190,12 @@ tick_cb (gpointer user_data)
 	emit_tick (self);
 
 	if (g_get_monotonic_time () >= self->deadline)
+	{
 		advance_phase (self);
+		return G_SOURCE_CONTINUE;
+	}
+
+	maybe_enter_warning (self);
 
 	return G_SOURCE_CONTINUE;
 }
@@ -276,6 +304,23 @@ respite_timer_class_init (RespiteTimerClass *klass)
 		              G_SIGNAL_RUN_FIRST,
 		              0, NULL, NULL, NULL,
 		              G_TYPE_NONE, 1, RESPITE_TYPE_TIMER_STATE);
+
+	/**
+	 * RespiteTimer::warning:
+	 * @self: the timer
+	 * @postpones_remaining: postpones still available in this work cycle
+	 *
+	 * Emitted once per work cycle when the countdown enters the pre-break
+	 * warning window (and the warning is enabled), as the timer moves
+	 * WORKING -> WARNING. A subsequent postpone returns the timer to WORKING,
+	 * so the warning fires again as the new, later break approaches.
+	 */
+	signals[SIGNAL_WARNING] =
+		g_signal_new ("warning",
+		              G_TYPE_FROM_CLASS (klass),
+		              G_SIGNAL_RUN_FIRST,
+		              0, NULL, NULL, NULL,
+		              G_TYPE_NONE, 1, G_TYPE_UINT);
 
 	/**
 	 * RespiteTimer::break-started:
