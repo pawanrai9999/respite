@@ -22,13 +22,16 @@
 
 #include <adwaita.h>
 
+#include "respite-timer.h"
+
 G_BEGIN_DECLS
 
 #define RESPITE_TYPE_APPLICATION (respite_application_get_type())
 
 G_DECLARE_FINAL_TYPE (RespiteApplication, respite_application, RESPITE, APPLICATION, AdwApplication)
 
-RespiteApplication *respite_application_new (const char        *application_id,
-                                             GApplicationFlags  flags);
+RespiteApplication *respite_application_new       (const char        *application_id,
+                                                   GApplicationFlags  flags);
+RespiteTimer       *respite_application_get_timer (RespiteApplication *self);
 
 G_END_DECLS

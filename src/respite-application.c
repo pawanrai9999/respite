@@ -51,6 +51,19 @@ respite_application_new (const char        *application_id,
 	                     NULL);
 }
 
+/* Create the shared timer once per primary instance, before any activation or
+ * command line is handled, so every entry point operates on the same engine
+ * regardless of whether the first launch was --daemon or a plain window. */
+static void
+respite_application_startup (GApplication *app)
+{
+	RespiteApplication *self = RESPITE_APPLICATION (app);
+
+	G_APPLICATION_CLASS (respite_application_parent_class)->startup (app);
+
+	self->timer = respite_timer_new ();
+}
+
 /* Enter background/daemon mode: take a hold so the process stays alive with no
  * window. Idempotent, so repeated --daemon launches collapse onto one hold. */
 static void
@@ -63,9 +76,6 @@ respite_application_start_daemon (RespiteApplication *self)
 
 	g_application_hold (G_APPLICATION (self));
 	self->held = TRUE;
-
-	if (self->timer == NULL)
-		self->timer = respite_timer_new ();
 
 	respite_timer_start (self->timer);
 }
@@ -143,8 +153,17 @@ respite_application_class_init (RespiteApplicationClass *klass)
 
 	object_class->dispose = respite_application_dispose;
 
+	app_class->startup = respite_application_startup;
 	app_class->activate = respite_application_activate;
 	app_class->command_line = respite_application_command_line;
+}
+
+RespiteTimer *
+respite_application_get_timer (RespiteApplication *self)
+{
+	g_return_val_if_fail (RESPITE_IS_APPLICATION (self), NULL);
+
+	return self->timer;
 }
 
 static void
