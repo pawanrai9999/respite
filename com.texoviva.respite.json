@@ -1,7 +1,7 @@
 {
     "id" : "com.texoviva.respite",
     "runtime" : "org.gnome.Platform",
-    "runtime-version" : "48",
+    "runtime-version" : "50",
     "sdk" : "org.gnome.Sdk",
     "command" : "respite",
     "finish-args" : [
@@ -30,7 +30,7 @@
             "sources" : [
                 {
                     "type" : "git",
-                    "url" : "file:///home/pawan/Projects"
+                    "url" : "file:///home/pawan/Projects/Respite"
                 }
             ],
             "config-opts" : [
