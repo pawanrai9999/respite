@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=Respite
+Exec=respite
+Icon=com.texoviva.respite
+Terminal=false
+Type=Application
+Categories=Utility;
+Keywords=GTK;
+StartupNotify=true
+DBusActivatable=true

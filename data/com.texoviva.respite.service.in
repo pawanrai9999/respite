@@ -1,0 +1,3 @@
+[D-BUS Service]
+Name=com.texoviva.respite
+Exec=@bindir@/respite --gapplication-service
