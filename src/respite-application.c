@@ -64,6 +64,21 @@ respite_application_startup (GApplication *app)
 	self->timer = respite_timer_new ();
 }
 
+/* Stop the engine and drop the daemon hold. Idempotent so it can run from
+ * both the explicit quit action and the shutdown vfunc without double work. */
+static void
+respite_application_teardown (RespiteApplication *self)
+{
+	if (self->timer != NULL)
+		respite_timer_stop (self->timer);
+
+	if (self->held)
+	{
+		g_application_release (G_APPLICATION (self));
+		self->held = FALSE;
+	}
+}
+
 /* Enter background/daemon mode: take a hold so the process stays alive with no
  * window. Idempotent, so repeated --daemon launches collapse onto one hold. */
 static void
@@ -135,6 +150,16 @@ respite_application_activate (GApplication *app)
 	gtk_window_present (GTK_WINDOW (window));
 }
 
+/* Last chance to tear down cleanly however the process is ending (quit action,
+ * window close, or signal); safe to repeat after the quit action ran. */
+static void
+respite_application_shutdown (GApplication *app)
+{
+	respite_application_teardown (RESPITE_APPLICATION (app));
+
+	G_APPLICATION_CLASS (respite_application_parent_class)->shutdown (app);
+}
+
 static void
 respite_application_dispose (GObject *object)
 {
@@ -154,6 +179,7 @@ respite_application_class_init (RespiteApplicationClass *klass)
 	object_class->dispose = respite_application_dispose;
 
 	app_class->startup = respite_application_startup;
+	app_class->shutdown = respite_application_shutdown;
 	app_class->activate = respite_application_activate;
 	app_class->command_line = respite_application_command_line;
 }
@@ -199,6 +225,7 @@ respite_application_quit_action (GSimpleAction *action,
 
 	g_assert (RESPITE_IS_APPLICATION (self));
 
+	respite_application_teardown (self);
 	g_application_quit (G_APPLICATION (self));
 }
 
