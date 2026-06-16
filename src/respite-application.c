@@ -34,6 +34,12 @@ struct _RespiteApplication
 	/* The single work/break engine, shared across every entry point. */
 	RespiteTimer  *timer;
 
+	/* App-level view of the preferences, used to act on the autostart toggle.
+	 * @autostart_changed_id is the ::changed::autostart handler, blocked while
+	 * we write the portal's verdict back so the reconciliation does not loop. */
+	GSettings     *settings;
+	gulong         autostart_changed_id;
+
 	/* The break overlays currently on screen (one per monitor), live only
 	 * for the duration of a break. Empty while working or idle. */
 	GPtrArray     *overlays;
@@ -223,6 +229,34 @@ respite_application_on_tick (RespiteApplication *self,
 		respite_overlay_set_remaining (self->overlays->pdata[i], remaining);
 }
 
+/* The portal (or native fallback) has settled on an autostart state, which may
+ * differ from what was requested if the user denied it. Write the real state
+ * back into GSettings so the toggle reflects reality, with our own ::changed
+ * handler blocked so this correction does not trigger another request. */
+static void
+respite_application_autostart_settled (gboolean enabled,
+                                       gpointer user_data)
+{
+	RespiteApplication *self = user_data;
+
+	g_signal_handler_block (self->settings, self->autostart_changed_id);
+	g_settings_set_boolean (self->settings, "autostart", enabled);
+	g_signal_handler_unblock (self->settings, self->autostart_changed_id);
+}
+
+/* The autostart preference changed (from this window or another instance):
+ * ask the background layer to enable or disable login launch accordingly. */
+static void
+respite_application_autostart_changed (RespiteApplication *self,
+                                       const char         *key)
+{
+	gboolean enabled = g_settings_get_boolean (self->settings, "autostart");
+
+	respite_background_set_autostart (enabled,
+	                                  respite_application_autostart_settled,
+	                                  self);
+}
+
 /* Create the shared timer once per primary instance, before any activation or
  * command line is handled, so every entry point operates on the same engine
  * regardless of whether the first launch was --daemon or a plain window. */
@@ -232,6 +266,12 @@ respite_application_startup (GApplication *app)
 	RespiteApplication *self = RESPITE_APPLICATION (app);
 
 	G_APPLICATION_CLASS (respite_application_parent_class)->startup (app);
+
+	self->settings = g_settings_new ("com.texoviva.respite");
+	self->autostart_changed_id =
+		g_signal_connect_swapped (self->settings, "changed::autostart",
+		                          G_CALLBACK (respite_application_autostart_changed),
+		                          self);
 
 	self->timer = respite_timer_new ();
 
@@ -353,6 +393,7 @@ respite_application_dispose (GObject *object)
 
 	g_clear_pointer (&self->overlays, g_ptr_array_unref);
 	g_clear_object (&self->timer);
+	g_clear_object (&self->settings);
 
 	G_OBJECT_CLASS (respite_application_parent_class)->dispose (object);
 }
