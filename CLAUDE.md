@@ -6,11 +6,18 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Respite is a break-reminder application for the GNOME desktop, written in **C** using **GTK4 + libadwaita**, targeting **Wayland**. The user sets a work interval and a break length; when the interval elapses Respite blacks out every monitor with a centered `Break for MM:SS` countdown, allows a limited number of postponements, and is meant to run as an autostarting background daemon.
 
-**Current state:** the repository is still the default GNOME Builder "Hello World" template — it builds and shows a single window with a label. None of the described break/timer/overlay/daemon features are implemented yet. The README's "Behavior in Detail" and "Roadmap" sections describe the intended design, not existing code. Treat feature work as building from scratch on top of the template scaffold.
+**Current state:** Phase 1 (settings foundation) is complete — the "Hello World" template has been replaced with an Adwaita preferences window whose controls are bound two-way to GSettings with input constraints enforced. The timer engine, daemon/process model, break overlay, postpone mechanism, and autostart are not implemented yet (see `PLAN.md` for the phased roadmap and current status). The README's "Behavior in Detail" and "Roadmap" sections describe the intended design.
 
 ## Build & Run
 
-Standard Meson workflow (the project is normally developed in GNOME Builder):
+The GNOME Builder IDE and the build toolchain (meson, ninja, gtk4/libadwaita dev files) are **not installed natively on the host** — they are provided through Flatpak: GNOME Builder is installed as a Flatpak app, and meson/ninja/etc. come from the `org.gnome.Sdk` runtime (versions **49 and 50** are installed; note the manifest pins 48, which is not). To compile against that toolchain without Builder, run meson inside the SDK runtime:
+
+```sh
+flatpak run --filesystem=/home/pawan/Projects/Respite --command=sh org.gnome.Sdk//50 -c \
+  'meson setup _build && meson compile -C _build'
+```
+
+Standard Meson workflow (used inside Builder or any environment where the toolchain is on `PATH`):
 
 ```sh
 meson setup _build
