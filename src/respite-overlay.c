@@ -41,6 +41,37 @@ struct _RespiteOverlay
 
 G_DEFINE_FINAL_TYPE (RespiteOverlay, respite_overlay, GTK_TYPE_WINDOW)
 
+/* Refuse to close. Together with deletable=false this stops the break from
+ * being dismissed via window controls or the usual close shortcuts. It is a
+ * nudge, not a lock: see the focus-assertion note below. */
+static gboolean
+respite_overlay_close_request (GtkWindow *window)
+{
+	return GDK_EVENT_STOP;
+}
+
+/* Best-effort focus assertion. When the overlay loses focus we ask to be
+ * presented again. On Wayland under Mutter, a focus request without a valid
+ * activation token only flags the window as demanding attention rather than
+ * stealing focus, so this re-assert cannot trap the user: switching workspace
+ * or app away from the break still works. We make the break visually total and
+ * re-request focus; escaping it remains possible by design. */
+static void
+respite_overlay_notify_is_active (RespiteOverlay *self)
+{
+	if (!gtk_window_is_active (GTK_WINDOW (self)))
+		gtk_window_present (GTK_WINDOW (self));
+}
+
+/* Pull keyboard focus to the overlay as soon as it is shown. */
+static void
+respite_overlay_map (GtkWidget *widget)
+{
+	GTK_WIDGET_CLASS (respite_overlay_parent_class)->map (widget);
+
+	gtk_widget_grab_focus (widget);
+}
+
 static void
 respite_overlay_dispose (GObject *object)
 {
@@ -59,6 +90,7 @@ respite_overlay_class_init (RespiteOverlayClass *klass)
 	g_autoptr(GtkCssProvider) provider = gtk_css_provider_new ();
 
 	object_class->dispose = respite_overlay_dispose;
+	widget_class->map = respite_overlay_map;
 
 	gtk_widget_class_set_template_from_resource (widget_class, "/com/texoviva/respite/respite-overlay.ui");
 	gtk_widget_class_bind_template_child (widget_class, RespiteOverlay, countdown_label);
@@ -75,6 +107,11 @@ static void
 respite_overlay_init (RespiteOverlay *self)
 {
 	gtk_widget_init_template (GTK_WIDGET (self));
+
+	g_signal_connect (self, "close-request",
+	                  G_CALLBACK (respite_overlay_close_request), NULL);
+	g_signal_connect (self, "notify::is-active",
+	                  G_CALLBACK (respite_overlay_notify_is_active), NULL);
 }
 
 RespiteOverlay *
