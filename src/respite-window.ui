@@ -2,10 +2,45 @@
 <interface>
   <requires lib="gtk" version="4.0"/>
   <requires lib="Adw" version="1.0"/>
+  <object class="GtkAdjustment" id="work_interval_adjustment">
+    <property name="lower">1</property>
+    <property name="upper">240</property>
+    <property name="value">25</property>
+    <property name="step-increment">1</property>
+    <property name="page-increment">5</property>
+  </object>
+  <object class="GtkAdjustment" id="break_duration_adjustment">
+    <property name="lower">1</property>
+    <property name="upper">60</property>
+    <property name="value">5</property>
+    <property name="step-increment">1</property>
+    <property name="page-increment">5</property>
+  </object>
+  <object class="GtkAdjustment" id="postpone_allowance_adjustment">
+    <property name="lower">0</property>
+    <property name="upper">20</property>
+    <property name="value">3</property>
+    <property name="step-increment">1</property>
+    <property name="page-increment">5</property>
+  </object>
+  <object class="GtkAdjustment" id="postpone_duration_adjustment">
+    <property name="lower">1</property>
+    <property name="upper">30</property>
+    <property name="value">2</property>
+    <property name="step-increment">1</property>
+    <property name="page-increment">5</property>
+  </object>
+  <object class="GtkAdjustment" id="pre_break_warning_adjustment">
+    <property name="lower">0</property>
+    <property name="upper">600</property>
+    <property name="value">30</property>
+    <property name="step-increment">5</property>
+    <property name="page-increment">30</property>
+  </object>
   <template class="RespiteWindow" parent="AdwApplicationWindow">
     <property name="title" translatable="yes">Respite</property>
-    <property name="default-width">800</property>
-    <property name="default-height">600</property>
+    <property name="default-width">640</property>
+    <property name="default-height">580</property>
     <property name="content">
       <object class="AdwToolbarView">
         <child type="top">
@@ -21,11 +56,65 @@
           </object>
         </child>
         <property name="content">
-          <object class="GtkLabel" id="label">
-            <property name="label" translatable="yes">Hello, World!</property>
-            <style>
-              <class name="title-1"/>
-            </style>
+          <object class="AdwPreferencesPage">
+            <child>
+              <object class="AdwPreferencesGroup">
+                <property name="title" translatable="yes">Schedule</property>
+                <property name="description" translatable="yes">How long you work before a break, and how long each break lasts.</property>
+                <child>
+                  <object class="AdwSpinRow" id="work_interval_row">
+                    <property name="title" translatable="yes">Work Interval</property>
+                    <property name="subtitle" translatable="yes">Minutes of work before a break begins</property>
+                    <property name="adjustment">work_interval_adjustment</property>
+                  </object>
+                </child>
+                <child>
+                  <object class="AdwSpinRow" id="break_duration_row">
+                    <property name="title" translatable="yes">Break Duration</property>
+                    <property name="subtitle" translatable="yes">Minutes each break lasts</property>
+                    <property name="adjustment">break_duration_adjustment</property>
+                  </object>
+                </child>
+              </object>
+            </child>
+            <child>
+              <object class="AdwPreferencesGroup">
+                <property name="title" translatable="yes">Postpone</property>
+                <property name="description" translatable="yes">Let an urgent moment delay a break a limited number of times.</property>
+                <child>
+                  <object class="AdwSpinRow" id="postpone_allowance_row">
+                    <property name="title" translatable="yes">Postpone Allowance</property>
+                    <property name="subtitle" translatable="yes">Times a break may be postponed per cycle (0 disables)</property>
+                    <property name="adjustment">postpone_allowance_adjustment</property>
+                  </object>
+                </child>
+                <child>
+                  <object class="AdwSpinRow" id="postpone_duration_row">
+                    <property name="title" translatable="yes">Postpone Duration</property>
+                    <property name="subtitle" translatable="yes">Minutes a break is delayed each time it is postponed</property>
+                    <property name="adjustment">postpone_duration_adjustment</property>
+                  </object>
+                </child>
+                <child>
+                  <object class="AdwSpinRow" id="pre_break_warning_row">
+                    <property name="title" translatable="yes">Pre-Break Warning</property>
+                    <property name="subtitle" translatable="yes">Seconds before a break to show the warning (0 disables)</property>
+                    <property name="adjustment">pre_break_warning_adjustment</property>
+                  </object>
+                </child>
+              </object>
+            </child>
+            <child>
+              <object class="AdwPreferencesGroup">
+                <property name="title" translatable="yes">Startup</property>
+                <child>
+                  <object class="AdwSwitchRow" id="autostart_row">
+                    <property name="title" translatable="yes">Start on Login</property>
+                    <property name="subtitle" translatable="yes">Run Respite in the background when you log in</property>
+                  </object>
+                </child>
+              </object>
+            </child>
           </object>
         </property>
       </object>
