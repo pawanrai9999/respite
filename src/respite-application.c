@@ -72,22 +72,24 @@ respite_application_add_overlay (RespiteApplication *self,
 	gtk_window_present (GTK_WINDOW (overlay));
 }
 
-/* Cover the screen with break overlays. For now a single overlay on the first
- * monitor; 4.4 generalises this to one per monitor. */
+/* Cover every monitor with its own break overlay, so the nudge is total on a
+ * multi-head setup rather than leaving secondary displays usable. */
 static void
 respite_application_show_overlays (RespiteApplication *self)
 {
 	GListModel *monitors;
-	GdkMonitor *monitor;
+	guint n_monitors;
 
 	if (self->overlays->len > 0)
 		return;
 
 	monitors = gdk_display_get_monitors (gdk_display_get_default ());
+	n_monitors = g_list_model_get_n_items (monitors);
 
-	monitor = g_list_model_get_item (monitors, 0);
-	if (monitor != NULL)
+	for (guint i = 0; i < n_monitors; i++)
 	{
+		GdkMonitor *monitor = g_list_model_get_item (monitors, i);
+
 		respite_application_add_overlay (self, monitor);
 		g_object_unref (monitor);
 	}
