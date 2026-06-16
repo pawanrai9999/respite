@@ -2,6 +2,10 @@
 <interface>
   <requires lib="gtk" version="4.0"/>
   <requires lib="Adw" version="1.0"/>
+  <!-- Ranges mirror the GSettings schema. Duration adjustments are in minutes
+       (x60 = seconds): work-interval 60-14400s, break-duration 10-3600s,
+       postpone-duration 30-1800s; whole-minute granularity narrows the
+       duration minimums but stays within the schema bounds. -->
   <object class="GtkAdjustment" id="work_interval_adjustment">
     <property name="lower">1</property>
     <property name="upper">240</property>
@@ -66,6 +70,9 @@
                     <property name="title" translatable="yes">Work Interval</property>
                     <property name="subtitle" translatable="yes">Minutes of work before a break begins</property>
                     <property name="adjustment">work_interval_adjustment</property>
+                    <property name="digits">0</property>
+                    <property name="numeric">True</property>
+                    <property name="snap-to-ticks">True</property>
                   </object>
                 </child>
                 <child>
@@ -73,6 +80,9 @@
                     <property name="title" translatable="yes">Break Duration</property>
                     <property name="subtitle" translatable="yes">Minutes each break lasts</property>
                     <property name="adjustment">break_duration_adjustment</property>
+                    <property name="digits">0</property>
+                    <property name="numeric">True</property>
+                    <property name="snap-to-ticks">True</property>
                   </object>
                 </child>
               </object>
@@ -86,6 +96,9 @@
                     <property name="title" translatable="yes">Postpone Allowance</property>
                     <property name="subtitle" translatable="yes">Times a break may be postponed per cycle (0 disables)</property>
                     <property name="adjustment">postpone_allowance_adjustment</property>
+                    <property name="digits">0</property>
+                    <property name="numeric">True</property>
+                    <property name="snap-to-ticks">True</property>
                   </object>
                 </child>
                 <child>
@@ -93,6 +106,9 @@
                     <property name="title" translatable="yes">Postpone Duration</property>
                     <property name="subtitle" translatable="yes">Minutes a break is delayed each time it is postponed</property>
                     <property name="adjustment">postpone_duration_adjustment</property>
+                    <property name="digits">0</property>
+                    <property name="numeric">True</property>
+                    <property name="snap-to-ticks">True</property>
                   </object>
                 </child>
                 <child>
@@ -100,6 +116,9 @@
                     <property name="title" translatable="yes">Pre-Break Warning</property>
                     <property name="subtitle" translatable="yes">Seconds before a break to show the warning (0 disables)</property>
                     <property name="adjustment">pre_break_warning_adjustment</property>
+                    <property name="digits">0</property>
+                    <property name="numeric">True</property>
+                    <property name="snap-to-ticks">True</property>
                   </object>
                 </child>
               </object>
