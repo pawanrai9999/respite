@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<interface>
+  <requires lib="gtk" version="4.0"/>
+  <template class="RespiteOverlay" parent="GtkWindow">
+    <property name="decorated">false</property>
+    <property name="resizable">false</property>
+    <property name="deletable">false</property>
+    <style>
+      <class name="respite-overlay"/>
+    </style>
+    <child>
+      <object class="GtkLabel" id="countdown_label">
+        <property name="halign">center</property>
+        <property name="valign">center</property>
+        <property name="hexpand">true</property>
+        <property name="vexpand">true</property>
+        <property name="justify">center</property>
+        <property name="label" translatable="yes">Break for 00:00</property>
+        <style>
+          <class name="countdown"/>
+        </style>
+      </object>
+    </child>
+  </template>
+</interface>

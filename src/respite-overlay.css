@@ -1,0 +1,11 @@
+/* respite-overlay.css
+ *
+ * Styling for the break overlay window. Loaded from GResource and applied to
+ * the default display by RespiteOverlay.
+ *
+ * SPDX-License-Identifier: AGPL-3.0-or-later
+ */
+
+.respite-overlay {
+  background-color: black;
+}

@@ -4,5 +4,7 @@ data/com.texoviva.respite.desktop.in
 data/com.texoviva.respite.metainfo.xml.in
 data/com.texoviva.respite.gschema.xml
 src/main.c
+src/respite-overlay.c
+src/respite-overlay.ui
 src/respite-window.c
 src/respite-window.ui

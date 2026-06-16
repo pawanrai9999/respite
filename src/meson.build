@@ -1,6 +1,7 @@
 respite_sources = [
   'main.c',
   'respite-application.c',
+  'respite-overlay.c',
   'respite-timer.c',
   'respite-window.c',
 ]
