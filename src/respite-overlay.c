@@ -59,6 +59,11 @@ respite_overlay_close_request (GtkWindow *window)
 static void
 respite_overlay_notify_is_active (RespiteOverlay *self)
 {
+	/* Skip while the window is being torn down: destroying it unmaps it,
+	 * which flips is-active, and re-presenting here would fight the teardown. */
+	if (gtk_widget_in_destruction (GTK_WIDGET (self)))
+		return;
+
 	if (!gtk_window_is_active (GTK_WINDOW (self)))
 		gtk_window_present (GTK_WINDOW (self));
 }
