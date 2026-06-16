@@ -22,11 +22,15 @@
 #include <glib/gi18n.h>
 
 #include "respite-application.h"
+#include "respite-timer.h"
 #include "respite-window.h"
 
 struct _RespiteApplication
 {
 	AdwApplication parent_instance;
+
+	/* The single work/break engine, shared across every entry point. */
+	RespiteTimer  *timer;
 
 	/* TRUE once we have taken a g_application_hold to stay alive headless. */
 	gboolean       held;
@@ -59,6 +63,11 @@ respite_application_start_daemon (RespiteApplication *self)
 
 	g_application_hold (G_APPLICATION (self));
 	self->held = TRUE;
+
+	if (self->timer == NULL)
+		self->timer = respite_timer_new ();
+
+	respite_timer_start (self->timer);
 }
 
 /* The primary instance processes every invocation's command line here, whether
@@ -101,9 +110,22 @@ respite_application_activate (GApplication *app)
 }
 
 static void
+respite_application_dispose (GObject *object)
+{
+	RespiteApplication *self = RESPITE_APPLICATION (object);
+
+	g_clear_object (&self->timer);
+
+	G_OBJECT_CLASS (respite_application_parent_class)->dispose (object);
+}
+
+static void
 respite_application_class_init (RespiteApplicationClass *klass)
 {
+	GObjectClass *object_class = G_OBJECT_CLASS (klass);
 	GApplicationClass *app_class = G_APPLICATION_CLASS (klass);
+
+	object_class->dispose = respite_application_dispose;
 
 	app_class->activate = respite_application_activate;
 	app_class->command_line = respite_application_command_line;
