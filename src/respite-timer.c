@@ -234,6 +234,35 @@ respite_timer_stop (RespiteTimer *self)
 	set_state (self, RESPITE_TIMER_STATE_IDLE);
 }
 
+gboolean
+respite_timer_postpone (RespiteTimer *self)
+{
+	guint postpone_duration;
+
+	g_return_val_if_fail (RESPITE_IS_TIMER (self), FALSE);
+
+	/* Only meaningful before the break actually starts; once it has begun
+	 * (or the timer is idle) there is nothing to push back. */
+	if (self->state != RESPITE_TIMER_STATE_WORKING &&
+	    self->state != RESPITE_TIMER_STATE_WARNING)
+		return FALSE;
+
+	if (self->postpones_remaining == 0)
+		return FALSE;
+
+	postpone_duration = g_settings_get_uint (self->settings, "postpone-duration");
+
+	self->deadline += (gint64) postpone_duration * G_USEC_PER_SEC;
+	self->postpones_remaining--;
+
+	/* Drop back to WORKING so the pre-break warning fires again as the new,
+	 * later deadline approaches. emit_tick then publishes the grown countdown. */
+	set_state (self, RESPITE_TIMER_STATE_WORKING);
+	emit_tick (self);
+
+	return TRUE;
+}
+
 RespiteTimerState
 respite_timer_get_state (RespiteTimer *self)
 {
