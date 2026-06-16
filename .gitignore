@@ -1,0 +1,9 @@
+# Meson build directory
+/_build/
+
+# Flatpak build directories
+/_flatpak/
+/.flatpak-builder/
+
+# Compiled GSettings schemas
+gschemas.compiled
