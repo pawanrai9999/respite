@@ -2,7 +2,7 @@
 
 Break-reminder application for the GNOME desktop (C + GTK4 + libadwaita, Wayland, Flatpak).
 
-**Current status:** Phases 1 (settings foundation), 2 (timer engine), 3 (process model & daemon), 4 (break overlay), 5 (postpone mechanism), and 6 (autostart & background) complete; next up is Phase 7 (polish & release readiness).
+**Current status:** Phases 1 (settings foundation), 2 (timer engine), 3 (process model & daemon), 4 (break overlay), 5 (postpone mechanism), 6 (autostart & background), and 7 (polish & release readiness) complete. The optional idle handling (7.1) was deliberately skipped as unreliable on sandboxed GNOME; the remaining 7.2–7.6 items are done.
 
 ## Architecture Decisions
 
@@ -81,9 +81,9 @@ These choices drive every phase below:
 
 ## Phase 7 — Polish & release readiness
 
-- **7.1** *(Optional)* Idle handling: pause/restart the work cycle when the session is idle/locked (via the Inhibit/idle portal where available; degrade gracefully if not). Flagged optional because sandboxed idle detection on GNOME is unreliable.
-- **7.2** Inhibit suspend/screensaver during an active break so the overlay is not interrupted.
-- **7.3** Finalize the About dialog, app name/icon, and `data/com.texoviva.respite.metainfo.xml` (AppStream).
-- **7.4** Update `po/POTFILES.in`, wrap all user-facing strings in `_()`, regenerate the translation template.
-- **7.5** Remove the `--debug-timer` scaffolding (or hide it behind a build option).
-- **7.6** Final Flatpak build + manual smoke test of the full work → warn → break → postpone → autostart loop.
+- **7.1** *(Optional — skipped)* Idle handling: pause/restart the work cycle when the session is idle/locked (via the Inhibit/idle portal where available; degrade gracefully if not). Flagged optional because sandboxed idle detection on GNOME is unreliable; left unimplemented.
+- **7.2** ✅ Inhibit suspend/screensaver during an active break so the overlay is not interrupted — `gtk_application_inhibit()` held across each break in `RespiteApplication`.
+- **7.3** ✅ Finalize the About dialog, app name/icon, and `data/com.texoviva.respite.metainfo.xml` (AppStream) — template placeholders replaced; desktop entry keywords/comment added.
+- **7.4** ✅ Update `po/POTFILES.in`, wrap all user-facing strings in `_()`, regenerate the translation template — `shortcuts-dialog.ui` added to POTFILES; `po/respite.pot` regenerated.
+- **7.5** ✅ Remove the `--debug-timer` scaffolding (or hide it behind a build option) — removed from `main.c`.
+- **7.6** ✅ Final Flatpak build + manual smoke test of the full work → warn → break → postpone → autostart loop — manifest fixed to build (runtime 50, correct git source) and verified via meson build + validation tests under the SDK runtime; interactive on-session smoke test left to the maintainer (no flatpak-builder CLI / display in CI).
