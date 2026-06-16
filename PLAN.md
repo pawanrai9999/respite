@@ -2,7 +2,7 @@
 
 Break-reminder application for the GNOME desktop (C + GTK4 + libadwaita, Wayland, Flatpak).
 
-**Current status:** Phases 1 (settings foundation), 2 (timer engine), 3 (process model & daemon), 4 (break overlay), 5 (postpone mechanism), 6 (autostart & background), and 7 (polish & release readiness) complete. The optional idle handling (7.1) was deliberately skipped as unreliable on sandboxed GNOME; the remaining 7.2–7.6 items are done.
+**Current status:** Phases 1 (settings foundation), 2 (timer engine), 3 (process model & daemon), 4 (break overlay), 5 (postpone mechanism), 6 (autostart & background), and 7 (polish & release readiness) complete. The optional idle handling (7.1) was deliberately skipped as unreliable on sandboxed GNOME; the remaining 7.2–7.6 items are done. A post-7 polish item adds an in-app **Status** panel and **Pause/Resume** control (see below). Release tooling — `.editorconfig` and `.clang-format` capturing the GTK C style — is in place.
 
 ## Architecture Decisions
 
@@ -87,3 +87,9 @@ These choices drive every phase below:
 - **7.4** ✅ Update `po/POTFILES.in`, wrap all user-facing strings in `_()`, regenerate the translation template — `shortcuts-dialog.ui` added to POTFILES; `po/respite.pot` regenerated.
 - **7.5** ✅ Remove the `--debug-timer` scaffolding (or hide it behind a build option) — removed from `main.c`.
 - **7.6** ✅ Final Flatpak build + manual smoke test of the full work → warn → break → postpone → autostart loop — manifest fixed to build (runtime 50, correct git source) and verified via meson build + validation tests under the SDK runtime; interactive on-session smoke test left to the maintainer (no flatpak-builder CLI / display in CI).
+
+## Post-Phase 7 — Polish
+
+- **P.1** ✅ In-app **Status** panel: the settings window mirrors the shared `RespiteTimer` live — phase headline + icon, a countdown subtitle to the next transition, and a postpones-remaining row shown only while a postpone could still be spent.
+- **P.2** ✅ **Pause/Resume** control (`app.toggle-timer`): one button stops or restarts the work/break cycle. `RespiteApplication` keeps the daemon hold across a pause so a paused process stays alive and ready to resume, releasing it only on quit.
+- **P.3** ✅ Release tooling: `.editorconfig` and `.clang-format` capture the GTK/GNOME C style for contributors; README rewritten from the old template stub to document the finished app, build/run, and the formatting workflow.

@@ -1,0 +1,44 @@
+# EditorConfig — https://editorconfig.org
+# Keeps whitespace consistent with the GNOME/GTK style used across the tree.
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+# C sources: tab indentation (tabs for indent, spaces for alignment), tabs
+# displayed eight columns wide — matches src/.
+[*.{c,h}]
+indent_style = tab
+indent_size = 8
+tab_width = 8
+
+# GtkBuilder UI, GResource, AppStream and GSettings XML: two-space indent.
+[*.{ui,xml}]
+indent_style = space
+indent_size = 2
+
+# Meson build definitions: two-space indent.
+[meson.build]
+indent_style = space
+indent_size = 2
+
+# Flatpak manifest and other JSON: four-space indent.
+[*.json]
+indent_style = space
+indent_size = 4
+
+[*.{yml,yaml}]
+indent_style = space
+indent_size = 2
+
+# Markdown: keep trailing whitespace (it can be a hard line break).
+[*.md]
+trim_trailing_whitespace = false
+
+# Gettext catalogs are tool-generated; leave their formatting untouched.
+[*.{po,pot}]
+trim_trailing_whitespace = false
+insert_final_newline = false

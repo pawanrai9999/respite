@@ -1,0 +1,32 @@
+# clang-format configuration for Respite.
+#
+# Targets the GNOME/GTK C style used throughout src/: the function return type
+# sits on its own line, braces are on their own line at the statement's
+# indentation (Allman), every parenthesis is preceded by a space, pointers bind
+# to the name, and indentation uses tabs while alignment uses spaces.
+#
+# Run from the project root:
+#   clang-format -i src/*.c src/*.h
+# or check without modifying:
+#   clang-format --dry-run --Werror src/*.c src/*.h
+---
+Language: Cpp
+BasedOnStyle: GNU
+
+IndentWidth: 8
+TabWidth: 8
+UseTab: ForIndentation
+ColumnLimit: 0
+
+BreakBeforeBraces: Allman
+PointerAlignment: Right
+AlignAfterOpenBracket: Align
+SpaceBeforeParens: Always
+
+AllowShortFunctionsOnASingleLine: None
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLoopsOnASingleLine: false
+
+# Includes are ordered deliberately (config.h first, then system, then local
+# headers); do not let clang-format shuffle them.
+SortIncludes: false

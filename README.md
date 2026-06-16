@@ -20,7 +20,7 @@ without thinking.
 
 The concept is simple:
 
-1. The user sets a **work interval** (e.g. 25 minutes) and a **break time**
+1. The user sets a **work interval** (e.g. 25 minutes) and a **break duration**
    (e.g. 5 minutes).
 2. Respite runs quietly in the background and counts down the work interval.
 3. When the interval elapses, Respite **takes over the entire screen**, painting
@@ -31,12 +31,12 @@ The concept is simple:
    ```
 
 4. The countdown ticks down second by second (`05:00`, `04:59`, … `00:00`).
-5. When the break time is over, the overlay disappears and the desktop returns
-   to normal. The work interval starts again, and the cycle repeats.
+5. When the break is over, the overlay disappears and the desktop returns to
+   normal. The work interval starts again, and the cycle repeats.
 
 ### Example
 
-If the user sets the interval to **25 minutes** and the break time to **5
+If the user sets the interval to **25 minutes** and the break duration to **5
 minutes**, Respite will remind the user every 25 minutes to take a break, then
 black out the screen for 5 minutes before returning to normal.
 
@@ -49,23 +49,47 @@ black out the screen for 5 minutes before returning to normal.
   full-screen overlay.
 - The overlay shows the text **`Break for MM:SS`** centered on screen, where the
   time counts down to zero.
+- Monitors plugged in or unplugged during a break are reconciled live, so a
+  newly connected display is covered immediately.
 - The overlay is intended to be hard to ignore so that the break actually
   happens, while still respecting the user's ability to handle the occasional
   emergency (see *Postpone* below).
 
-### Postpone (limited)
+### Pre-break warning & postpone (limited)
+- A configurable number of seconds before a break, Respite raises a **warning
+  notification** with a **Postpone** button so a break never arrives without
+  notice.
 - Breaks are not infinitely dismissible. Respite allows a **limited number of
-  postponements** so that a user who is in the middle of something urgent can
-  delay a break — but cannot avoid breaks indefinitely.
+  postponements** per cycle so that a user who is in the middle of something
+  urgent can delay a break — but cannot avoid breaks indefinitely. Each
+  postponement pushes the break back by a configurable amount.
 - Once the allowance for a cycle is used up, the break proceeds and must be
-  taken.
+  taken. The allowance resets at the start of each new work interval.
+
+### Status & pause
+- The settings window shows a live **Status** panel: the current phase
+  (working, break starting soon, on a break, or paused), a countdown to the next
+  transition, and how many postponements remain this cycle.
+- A **Pause / Resume** control stops and restarts the work/break cycle without
+  quitting the daemon.
 
 ### Background operation
 - Respite is designed to **run as a background daemon** and to **start
   automatically on login**, so the work/break cycle continues across the session
   without the user needing to keep a window open.
 - A small front-end (built with **GTK4 + libadwaita**) is used to configure the
-  interval, break time, postpone allowance, and autostart preference.
+  work interval, break duration, pre-break warning, postpone behavior, and the
+  start-on-login preference.
+- During an active break, Respite holds a session inhibitor so the system does
+  not suspend or blank the screen out from under the overlay.
+
+### Wayland note
+On Wayland, applications cannot freely grab the whole screen or all input the way
+they can under X11, and GNOME's Mutter does not implement `wlr-layer-shell`. The
+break overlay is therefore a **best-effort visual nudge**, not an unbreakable
+lock: it fullscreens on every monitor, grabs focus, and re-presents itself, but
+a determined user can still switch workspace or application from the keyboard.
+The point is to make skipping a break a deliberate act rather than a reflex.
 
 ---
 
@@ -74,62 +98,104 @@ black out the screen for 5 minutes before returning to normal.
 - **Language:** C
 - **UI toolkit:** GTK4 + libadwaita
 - **Display server:** Wayland (GNOME)
-- **Build system:** Meson (via GNOME Builder)
-
-> This repository currently contains the default **"Hello World" GNOME Builder
-> template**. The functionality described above is the planned design and is not
-> yet implemented.
-
-### Wayland note
-
-On Wayland, applications cannot freely grab the whole screen or all input the way
-they can under X11. The full-screen break overlay and input handling will be
-implemented using Wayland-appropriate mechanisms (e.g. layer-shell / fullscreen
-surfaces and the relevant GNOME APIs). The exact approach will be documented as
-the implementation progresses.
+- **Build system:** Meson
+- **Packaging:** Flatpak (sandboxed; all privileged behavior goes through XDG
+  portals)
 
 ---
 
 ## Status
 
-🚧 **Early / scaffolding stage.** This is the initial project skeleton generated
-from the GNOME Builder template. Core features (timer engine, configurable
-interval and break time, full-screen overlay, limited postpone, autostart
-daemon) are planned and under development.
+✅ **Feature-complete.** The timer engine, settings UI, full-screen multi-monitor
+overlay, pre-break warning, limited postpone, background daemon, and
+start-on-login are all implemented. See [`PLAN.md`](PLAN.md) for the phased
+roadmap and what was deliberately left out.
 
 ---
 
-## Building
+## Building & Running
 
-This is a standard GNOME Builder / Meson project.
+Respite is a standard Meson project that needs the GTK4 and libadwaita
+development files plus the usual GNOME build tooling (meson, ninja,
+`glib-compile-schemas`, `desktop-file-validate`, `appstreamcli`).
+
+### With the GNOME toolchain on `PATH`
 
 ```sh
-# Open in GNOME Builder and press Run, or build from the command line:
 meson setup _build
 meson compile -C _build
-meson install -C _build   # optional
+./_build/src/respite          # run the built binary
+meson test -C _build          # run the data-file validation tests
+meson install -C _build       # optional, installs system-wide
 ```
 
-*(Exact build dependencies will be listed here as the project matures.)*
+The binary takes a single optional flag, `--daemon`, which runs Respite headless
+(no window) as the background timer; any other invocation presents or raises the
+settings window.
+
+### Inside the GNOME SDK runtime
+
+If meson/GTK are not installed on the host but the `org.gnome.Sdk` Flatpak
+runtime is, build against it directly:
+
+```sh
+flatpak run --filesystem="$PWD" --command=sh org.gnome.Sdk//50 -c \
+  'meson setup _build && meson compile -C _build && meson test -C _build'
+```
+
+### Flatpak
+
+```sh
+flatpak-builder --user --install _flatpak com.texoviva.respite.json
+flatpak run com.texoviva.respite
+```
+
+The manifest (`com.texoviva.respite.json`) builds against GNOME Platform/SDK 50.
+Its git source points at the local checkout, so a Flatpak build pulls **committed**
+code — commit your changes before building.
+
+---
+
+## Development
+
+- **Code style:** GNOME/GTK C style — tab indentation, GNU-style layout with the
+  function return type on its own line, Allman braces, and a space before every
+  parenthesis. The style is captured in [`.clang-format`](.clang-format) and
+  [`.editorconfig`](.editorconfig).
+- **Linting / formatting:** check formatting without modifying files, or apply it:
+
+  ```sh
+  clang-format --dry-run --Werror src/*.c src/*.h   # check
+  clang-format -i src/*.c src/*.h                    # apply
+  ```
+
+- **UI** is defined in GtkBuilder `.ui` templates under `src/`, bundled via
+  `src/respite.gresource.xml`.
+- **Settings** live in the GSettings schema
+  `data/com.texoviva.respite.gschema.xml`; durations are stored in seconds and
+  presented as minutes in the UI.
+- **Translations:** wrap user-facing strings in `_()` and add new translatable
+  source files to `po/POTFILES.in`.
 
 ---
 
 ## Roadmap
 
-- [ ] Timer engine for the work/break cycle
-- [ ] Settings UI for interval, break time, and postpone allowance
-- [ ] Full-screen black break overlay with live `MM:SS` countdown
-- [ ] Multi-monitor support
-- [ ] Limited postpone mechanism
-- [ ] Background daemon + autostart on login
-- [ ] Persisting user preferences
+- [x] Timer engine for the work/break cycle
+- [x] Settings UI for interval, break duration, and postpone allowance
+- [x] Full-screen black break overlay with live `MM:SS` countdown
+- [x] Multi-monitor support (with live hotplug handling)
+- [x] Pre-break warning and limited postpone mechanism
+- [x] Background daemon + autostart on login
+- [x] Persisting user preferences
 
 ---
 
 ## Contributing
 
 Contributions are welcome. Please open an issue to discuss substantial changes
-before submitting a pull request.
+before submitting a pull request, and keep formatting consistent with the
+project's `.clang-format` / `.editorconfig`.
 
 ---
 
