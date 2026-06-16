@@ -163,9 +163,46 @@ respite_application_hide_overlays (RespiteApplication *self)
 	g_ptr_array_set_size (self->overlays, 0);
 }
 
+/* Stable id so the warning notification is updated/replaced in place rather
+ * than stacking, and can be withdrawn once it is no longer relevant. */
+#define RESPITE_WARNING_NOTIFICATION_ID "respite-warning"
+
+/* A break is approaching: raise a notification so the user has a chance to
+ * react before every screen blacks out. When postpones remain, attach a
+ * Postpone button (wired to app.postpone) and reflect how many are left. */
+static void
+respite_application_on_warning (RespiteApplication *self,
+                                guint               postpones_remaining)
+{
+	g_autoptr(GNotification) notification = g_notification_new (_("Break coming up"));
+	g_autofree char *body = NULL;
+
+	if (postpones_remaining > 0)
+	{
+		/* TRANSLATORS: %u is the number of postpones still available. */
+		body = g_strdup_printf (ngettext ("A break is about to start. You can postpone it %u more time.",
+		                                  "A break is about to start. You can postpone it %u more times.",
+		                                  postpones_remaining),
+		                        postpones_remaining);
+		g_notification_add_button (notification, _("Postpone"), "app.postpone");
+	}
+	else
+	{
+		body = g_strdup (_("A break is about to start."));
+	}
+
+	g_notification_set_body (notification, body);
+	g_application_send_notification (G_APPLICATION (self),
+	                                 RESPITE_WARNING_NOTIFICATION_ID, notification);
+}
+
 static void
 respite_application_on_break_started (RespiteApplication *self)
 {
+	/* The break is here; the warning (and its Postpone offer) is moot. */
+	g_application_withdraw_notification (G_APPLICATION (self),
+	                                     RESPITE_WARNING_NOTIFICATION_ID);
+
 	respite_application_show_overlays (self);
 }
 
@@ -197,6 +234,8 @@ respite_application_startup (GApplication *app)
 
 	self->timer = respite_timer_new ();
 
+	g_signal_connect_swapped (self->timer, "warning",
+	                          G_CALLBACK (respite_application_on_warning), self);
 	g_signal_connect_swapped (self->timer, "break-started",
 	                          G_CALLBACK (respite_application_on_break_started), self);
 	g_signal_connect_swapped (self->timer, "break-ended",
@@ -360,6 +399,25 @@ respite_application_about_action (GSimpleAction *action,
 	                       NULL);
 }
 
+/* Activated from the warning notification's Postpone button: push the break
+ * back if any allowance remains, then withdraw the notification either way so
+ * it does not linger after being acted on. */
+static void
+respite_application_postpone_action (GSimpleAction *action,
+                                     GVariant      *parameter,
+                                     gpointer       user_data)
+{
+	RespiteApplication *self = user_data;
+
+	g_assert (RESPITE_IS_APPLICATION (self));
+
+	if (self->timer != NULL)
+		respite_timer_postpone (self->timer);
+
+	g_application_withdraw_notification (G_APPLICATION (self),
+	                                     RESPITE_WARNING_NOTIFICATION_ID);
+}
+
 static void
 respite_application_quit_action (GSimpleAction *action,
                                  GVariant      *parameter,
@@ -376,6 +434,7 @@ respite_application_quit_action (GSimpleAction *action,
 static const GActionEntry app_actions[] = {
 	{ "quit", respite_application_quit_action },
 	{ "about", respite_application_about_action },
+	{ "postpone", respite_application_postpone_action },
 };
 
 static const GOptionEntry app_options[] = {
