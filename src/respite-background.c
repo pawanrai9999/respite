@@ -22,7 +22,10 @@
 
 #include "respite-background.h"
 
+#include <errno.h>
+
 #include <glib/gi18n.h>
+#include <glib/gstdio.h>
 
 /* Background and autostart integration.
  *
@@ -245,21 +248,88 @@ respite_background_request_run_in_background (void)
 		FALSE, FALSE, NULL, NULL);
 }
 
+/* The XDG autostart entry used when running outside the sandbox. The desktop
+ * id matches the app id so it sits beside other autostart entries cleanly. */
+#define AUTOSTART_DESKTOP_ID "com.texoviva.respite.desktop"
+
+static char *
+native_autostart_path (void)
+{
+	return g_build_filename (g_get_user_config_dir (), "autostart",
+	                         AUTOSTART_DESKTOP_ID, NULL);
+}
+
+/* Outside the sandbox autostart is just an XDG .desktop file in the user's
+ * autostart directory: write one to enable, delete it to disable. Reports the
+ * state actually in effect, which on a failed write/delete is the prior one. */
+static void
+respite_set_native_autostart (gboolean                     enabled,
+                              RespiteBackgroundAutostartCb callback,
+                              gpointer                     user_data)
+{
+	g_autofree char *path = native_autostart_path ();
+	gboolean in_effect;
+
+	if (enabled)
+	{
+		g_autofree char *dir = g_path_get_dirname (path);
+		g_autoptr(GKeyFile) keyfile = g_key_file_new ();
+		g_autoptr(GError) error = NULL;
+
+		g_key_file_set_string (keyfile, G_KEY_FILE_DESKTOP_GROUP,
+		                       G_KEY_FILE_DESKTOP_KEY_TYPE, "Application");
+		g_key_file_set_string (keyfile, G_KEY_FILE_DESKTOP_GROUP,
+		                       G_KEY_FILE_DESKTOP_KEY_NAME, "Respite");
+		/* Launch headless, mirroring the portal autostart commandline. */
+		g_key_file_set_string (keyfile, G_KEY_FILE_DESKTOP_GROUP,
+		                       G_KEY_FILE_DESKTOP_KEY_EXEC, "respite --daemon");
+		g_key_file_set_boolean (keyfile, G_KEY_FILE_DESKTOP_GROUP,
+		                        "X-GNOME-Autostart-enabled", TRUE);
+
+		if (g_mkdir_with_parents (dir, 0700) != 0)
+		{
+			g_warning ("Could not create autostart directory %s: %s",
+			           dir, g_strerror (errno));
+			in_effect = FALSE;
+		}
+		else if (!g_key_file_save_to_file (keyfile, path, &error))
+		{
+			g_warning ("Could not write autostart file %s: %s",
+			           path, error->message);
+			in_effect = FALSE;
+		}
+		else
+		{
+			in_effect = TRUE;
+		}
+	}
+	else
+	{
+		if (g_unlink (path) == 0 || errno == ENOENT)
+		{
+			in_effect = FALSE;
+		}
+		else
+		{
+			g_warning ("Could not remove autostart file %s: %s",
+			           path, g_strerror (errno));
+			in_effect = TRUE;
+		}
+	}
+
+	if (callback != NULL)
+		callback (in_effect, user_data);
+}
+
 void
 respite_background_set_autostart (gboolean                     enabled,
                                   RespiteBackgroundAutostartCb callback,
                                   gpointer                     user_data)
 {
 	if (respite_background_is_sandboxed ())
-	{
 		respite_portal_request_background (
 			_("Respite starts at login so it can remind you to take breaks."),
 			TRUE, enabled, callback, user_data);
-		return;
-	}
-
-	/* Native (non-sandboxed) autostart is handled in Phase 6.5; for now assume
-	 * the requested state took effect so the preference is not bounced back. */
-	if (callback != NULL)
-		callback (enabled, user_data);
+	else
+		respite_set_native_autostart (enabled, callback, user_data);
 }
