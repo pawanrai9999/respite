@@ -51,6 +51,11 @@ struct _RespiteApplication
 
 	/* TRUE once we have taken a g_application_hold to stay alive headless. */
 	gboolean       held;
+
+	/* Non-zero while a break is on screen and we are holding a session
+	 * inhibitor against suspend/idle, so the overlay is not cut short by the
+	 * machine sleeping or the screensaver engaging. Zero when not inhibiting. */
+	guint          inhibit_cookie;
 };
 
 G_DEFINE_FINAL_TYPE (RespiteApplication, respite_application, ADW_TYPE_APPLICATION)
@@ -170,6 +175,34 @@ respite_application_hide_overlays (RespiteApplication *self)
 	g_ptr_array_set_size (self->overlays, 0);
 }
 
+/* Hold a session inhibitor for the duration of a break so the overlay is not
+ * interrupted by automatic suspend or the screensaver/idle dimming. Under
+ * Flatpak this is routed through the Inhibit portal; idempotent. */
+static void
+respite_application_inhibit (RespiteApplication *self)
+{
+	if (self->inhibit_cookie != 0)
+		return;
+
+	self->inhibit_cookie =
+		gtk_application_inhibit (GTK_APPLICATION (self), NULL,
+		                         GTK_APPLICATION_INHIBIT_SUSPEND |
+		                         GTK_APPLICATION_INHIBIT_IDLE,
+		                         _("A break is in progress"));
+}
+
+/* Release the break-time inhibitor taken above. Idempotent, so it is safe to
+ * call on break end and again during teardown. */
+static void
+respite_application_uninhibit (RespiteApplication *self)
+{
+	if (self->inhibit_cookie == 0)
+		return;
+
+	gtk_application_uninhibit (GTK_APPLICATION (self), self->inhibit_cookie);
+	self->inhibit_cookie = 0;
+}
+
 /* Stable id so the warning notification is updated/replaced in place rather
  * than stacking, and can be withdrawn once it is no longer relevant. */
 #define RESPITE_WARNING_NOTIFICATION_ID "respite-warning"
@@ -210,6 +243,7 @@ respite_application_on_break_started (RespiteApplication *self)
 	g_application_withdraw_notification (G_APPLICATION (self),
 	                                     RESPITE_WARNING_NOTIFICATION_ID);
 
+	respite_application_inhibit (self);
 	respite_application_show_overlays (self);
 }
 
@@ -217,6 +251,7 @@ static void
 respite_application_on_break_ended (RespiteApplication *self)
 {
 	respite_application_hide_overlays (self);
+	respite_application_uninhibit (self);
 }
 
 /* Push the countdown to every live overlay. Outside a break the array is
@@ -294,6 +329,7 @@ respite_application_teardown (RespiteApplication *self)
 		respite_timer_stop (self->timer);
 
 	respite_application_hide_overlays (self);
+	respite_application_uninhibit (self);
 
 	if (self->held)
 	{
