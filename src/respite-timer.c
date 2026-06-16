@@ -140,8 +140,8 @@ advance_phase (RespiteTimer *self)
 		break;
 
 	case RESPITE_TIMER_STATE_BREAK:
-		begin_working (self);
 		g_signal_emit (self, signals[SIGNAL_BREAK_ENDED], 0);
+		begin_working (self);
 		break;
 
 	case RESPITE_TIMER_STATE_IDLE:

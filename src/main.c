@@ -23,6 +23,80 @@
 #include <glib/gi18n.h>
 
 #include "respite-application.h"
+#include "respite-timer.h"
+
+/* --- Temporary --debug-timer scaffolding (Phase 2.6) ----------------------
+ *
+ * Runs the headless RespiteTimer with no GApplication and no UI, logging
+ * every state change and tick to the console so the engine can be validated
+ * before the overlay exists. This whole block is removed in Phase 7.5.
+ */
+
+static const char *
+debug_state_name (RespiteTimerState state)
+{
+	switch (state)
+	{
+	case RESPITE_TIMER_STATE_IDLE:    return "IDLE";
+	case RESPITE_TIMER_STATE_WORKING: return "WORKING";
+	case RESPITE_TIMER_STATE_WARNING: return "WARNING";
+	case RESPITE_TIMER_STATE_BREAK:   return "BREAK";
+	default:                          return "?";
+	}
+}
+
+static void
+debug_on_tick (RespiteTimer *timer,
+               guint         remaining,
+               gpointer      user_data)
+{
+	g_print ("[%s] tick: %02u:%02u\n",
+	         debug_state_name (respite_timer_get_state (timer)),
+	         remaining / 60, remaining % 60);
+}
+
+static void
+debug_on_state_changed (RespiteTimer      *timer,
+                        RespiteTimerState  state,
+                        gpointer           user_data)
+{
+	g_print ("== state-changed: %s\n", debug_state_name (state));
+}
+
+static void
+debug_on_break_started (RespiteTimer *timer,
+                        gpointer      user_data)
+{
+	g_print (">> break-started\n");
+}
+
+static void
+debug_on_break_ended (RespiteTimer *timer,
+                      gpointer      user_data)
+{
+	g_print ("<< break-ended\n");
+}
+
+static int
+run_debug_timer (void)
+{
+	g_autoptr(GMainLoop) loop = g_main_loop_new (NULL, FALSE);
+	g_autoptr(RespiteTimer) timer = respite_timer_new ();
+
+	g_print ("respite --debug-timer: console engine test, Ctrl+C to quit\n");
+
+	g_signal_connect (timer, "tick", G_CALLBACK (debug_on_tick), NULL);
+	g_signal_connect (timer, "state-changed", G_CALLBACK (debug_on_state_changed), NULL);
+	g_signal_connect (timer, "break-started", G_CALLBACK (debug_on_break_started), NULL);
+	g_signal_connect (timer, "break-ended", G_CALLBACK (debug_on_break_ended), NULL);
+
+	respite_timer_start (timer);
+	g_main_loop_run (loop);
+
+	return 0;
+}
+
+/* --- end --debug-timer scaffolding --------------------------------------- */
 
 int
 main (int   argc,
@@ -34,6 +108,10 @@ main (int   argc,
 	bindtextdomain (GETTEXT_PACKAGE, LOCALEDIR);
 	bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
 	textdomain (GETTEXT_PACKAGE);
+
+	for (int i = 1; i < argc; i++)
+		if (g_strcmp0 (argv[i], "--debug-timer") == 0)
+			return run_debug_timer ();
 
 	app = respite_application_new ("com.texoviva.respite", G_APPLICATION_DEFAULT_FLAGS);
 	ret = g_application_run (G_APPLICATION (app), argc, argv);
