@@ -56,11 +56,19 @@ respite_overlay_class_init (RespiteOverlayClass *klass)
 {
 	GObjectClass   *object_class = G_OBJECT_CLASS (klass);
 	GtkWidgetClass *widget_class = GTK_WIDGET_CLASS (klass);
+	g_autoptr(GtkCssProvider) provider = gtk_css_provider_new ();
 
 	object_class->dispose = respite_overlay_dispose;
 
 	gtk_widget_class_set_template_from_resource (widget_class, "/com/texoviva/respite/respite-overlay.ui");
 	gtk_widget_class_bind_template_child (widget_class, RespiteOverlay, countdown_label);
+
+	/* Load the overlay stylesheet once, when the type is first used, and apply
+	 * it display-wide; the .respite-overlay scoping keeps it off other widgets. */
+	gtk_css_provider_load_from_resource (provider, "/com/texoviva/respite/respite-overlay.css");
+	gtk_style_context_add_provider_for_display (gdk_display_get_default (),
+	                                            GTK_STYLE_PROVIDER (provider),
+	                                            GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
 }
 
 static void

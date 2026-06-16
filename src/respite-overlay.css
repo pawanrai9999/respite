@@ -9,3 +9,12 @@
 .respite-overlay {
   background-color: black;
 }
+
+/* A large, legible countdown. A dimmed near-white keeps it readable against
+ * the true-black field without the harshness of pure white at this size. */
+.respite-overlay .countdown {
+  color: #dddddd;
+  font-size: 96px;
+  font-weight: bold;
+  font-feature-settings: "tnum";
+}
