@@ -92,21 +92,37 @@ respite_application_command_line (GApplication            *app,
 	return 0;
 }
 
+/* Find the existing settings window, ignoring any transient surfaces, so a
+ * forwarded activation raises the real window rather than creating a second. */
+static RespiteWindow *
+respite_application_find_window (RespiteApplication *self)
+{
+	for (GList *l = gtk_application_get_windows (GTK_APPLICATION (self));
+	     l != NULL; l = l->next)
+		if (RESPITE_IS_WINDOW (l->data))
+			return RESPITE_WINDOW (l->data);
+
+	return NULL;
+}
+
 static void
 respite_application_activate (GApplication *app)
 {
-	GtkWindow *window;
+	RespiteApplication *self = RESPITE_APPLICATION (app);
+	RespiteWindow *window;
 
-	g_assert (RESPITE_IS_APPLICATION (app));
+	g_assert (RESPITE_IS_APPLICATION (self));
 
-	window = gtk_application_get_active_window (GTK_APPLICATION (app));
+	/* Single instance: reuse the open settings window if there is one,
+	 * including when the process is otherwise running headless as a daemon. */
+	window = respite_application_find_window (self);
 
 	if (window == NULL)
 		window = g_object_new (RESPITE_TYPE_WINDOW,
 		                       "application", app,
 		                       NULL);
 
-	gtk_window_present (window);
+	gtk_window_present (GTK_WINDOW (window));
 }
 
 static void
