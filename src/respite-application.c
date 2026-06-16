@@ -22,6 +22,7 @@
 #include <glib/gi18n.h>
 
 #include "respite-application.h"
+#include "respite-overlay.h"
 #include "respite-timer.h"
 #include "respite-window.h"
 
@@ -31,6 +32,10 @@ struct _RespiteApplication
 
 	/* The single work/break engine, shared across every entry point. */
 	RespiteTimer  *timer;
+
+	/* The break overlays currently on screen (one per monitor), live only
+	 * for the duration of a break. Empty while working or idle. */
+	GPtrArray     *overlays;
 
 	/* TRUE once we have taken a g_application_hold to stay alive headless. */
 	gboolean       held;
@@ -51,6 +56,72 @@ respite_application_new (const char        *application_id,
 	                     NULL);
 }
 
+/* Create one overlay covering @monitor, seed it with the current countdown so
+ * it does not flash a stale value, and present it. */
+static void
+respite_application_add_overlay (RespiteApplication *self,
+                                 GdkMonitor         *monitor)
+{
+	RespiteOverlay *overlay;
+
+	overlay = respite_overlay_new (GTK_APPLICATION (self), monitor);
+	respite_overlay_set_remaining (overlay,
+	                               respite_timer_get_remaining (self->timer));
+
+	g_ptr_array_add (self->overlays, overlay);
+	gtk_window_present (GTK_WINDOW (overlay));
+}
+
+/* Cover the screen with break overlays. For now a single overlay on the first
+ * monitor; 4.4 generalises this to one per monitor. */
+static void
+respite_application_show_overlays (RespiteApplication *self)
+{
+	GListModel *monitors;
+	GdkMonitor *monitor;
+
+	if (self->overlays->len > 0)
+		return;
+
+	monitors = gdk_display_get_monitors (gdk_display_get_default ());
+
+	monitor = g_list_model_get_item (monitors, 0);
+	if (monitor != NULL)
+	{
+		respite_application_add_overlay (self, monitor);
+		g_object_unref (monitor);
+	}
+}
+
+/* Tear down every break overlay. The array's free func destroys each window. */
+static void
+respite_application_hide_overlays (RespiteApplication *self)
+{
+	g_ptr_array_set_size (self->overlays, 0);
+}
+
+static void
+respite_application_on_break_started (RespiteApplication *self)
+{
+	respite_application_show_overlays (self);
+}
+
+static void
+respite_application_on_break_ended (RespiteApplication *self)
+{
+	respite_application_hide_overlays (self);
+}
+
+/* Push the countdown to every live overlay. Outside a break the array is
+ * empty, so working-phase ticks harmlessly do nothing. */
+static void
+respite_application_on_tick (RespiteApplication *self,
+                             guint               remaining)
+{
+	for (guint i = 0; i < self->overlays->len; i++)
+		respite_overlay_set_remaining (self->overlays->pdata[i], remaining);
+}
+
 /* Create the shared timer once per primary instance, before any activation or
  * command line is handled, so every entry point operates on the same engine
  * regardless of whether the first launch was --daemon or a plain window. */
@@ -62,6 +133,13 @@ respite_application_startup (GApplication *app)
 	G_APPLICATION_CLASS (respite_application_parent_class)->startup (app);
 
 	self->timer = respite_timer_new ();
+
+	g_signal_connect_swapped (self->timer, "break-started",
+	                          G_CALLBACK (respite_application_on_break_started), self);
+	g_signal_connect_swapped (self->timer, "break-ended",
+	                          G_CALLBACK (respite_application_on_break_ended), self);
+	g_signal_connect_swapped (self->timer, "tick",
+	                          G_CALLBACK (respite_application_on_tick), self);
 }
 
 /* Stop the engine and drop the daemon hold. Idempotent so it can run from
@@ -71,6 +149,8 @@ respite_application_teardown (RespiteApplication *self)
 {
 	if (self->timer != NULL)
 		respite_timer_stop (self->timer);
+
+	respite_application_hide_overlays (self);
 
 	if (self->held)
 	{
@@ -165,6 +245,7 @@ respite_application_dispose (GObject *object)
 {
 	RespiteApplication *self = RESPITE_APPLICATION (object);
 
+	g_clear_pointer (&self->overlays, g_ptr_array_unref);
 	g_clear_object (&self->timer);
 
 	G_OBJECT_CLASS (respite_application_parent_class)->dispose (object);
@@ -243,6 +324,10 @@ static const GOptionEntry app_options[] = {
 static void
 respite_application_init (RespiteApplication *self)
 {
+	/* Overlays are destroyed (not just unreffed) on removal, so the array's
+	 * free func tears down each window. */
+	self->overlays = g_ptr_array_new_with_free_func ((GDestroyNotify) gtk_window_destroy);
+
 	g_application_add_main_option_entries (G_APPLICATION (self), app_options);
 
 	g_action_map_add_action_entries (G_ACTION_MAP (self),
