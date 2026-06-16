@@ -10,3 +10,4 @@ src/respite-overlay.c
 src/respite-overlay.ui
 src/respite-window.c
 src/respite-window.ui
+src/shortcuts-dialog.ui

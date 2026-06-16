@@ -1,0 +1,275 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the respite package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: respite\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-06-17 00:58+0530\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=CHARSET\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\n"
+
+#: data/com.texoviva.respite.desktop.in:2
+#: data/com.texoviva.respite.metainfo.xml.in:7 src/respite-application.c:473
+#: src/respite-window.ui:45
+msgid "Respite"
+msgstr ""
+
+#: data/com.texoviva.respite.desktop.in:3
+#: data/com.texoviva.respite.metainfo.xml.in:8
+msgid "Take regular breaks from the screen"
+msgstr ""
+
+#: data/com.texoviva.respite.desktop.in:9
+msgid "break;timer;rest;health;pomodoro;eyes;"
+msgstr ""
+
+#: data/com.texoviva.respite.metainfo.xml.in:10
+msgid ""
+"Respite helps you protect your eyes, posture, and focus by enforcing regular "
+"breaks while you work. You set how long you want to work and how long each "
+"break should last, and Respite takes care of the rest."
+msgstr ""
+
+#: data/com.texoviva.respite.metainfo.xml.in:15
+msgid ""
+"When the work interval elapses, Respite blacks out every monitor with a "
+"centered countdown until the break is over. Breaks are not infinitely "
+"dismissible: a limited, configurable number of postponements lets you delay "
+"an urgent moment without skipping breaks entirely."
+msgstr ""
+
+#: data/com.texoviva.respite.metainfo.xml.in:21
+msgid "Features:"
+msgstr ""
+
+#: data/com.texoviva.respite.metainfo.xml.in:23
+msgid "Configurable work interval and break duration"
+msgstr ""
+
+#: data/com.texoviva.respite.metainfo.xml.in:24
+msgid "Full-screen break overlay across every connected monitor"
+msgstr ""
+
+#: data/com.texoviva.respite.metainfo.xml.in:25
+msgid "Pre-break warning with a limited postpone allowance"
+msgstr ""
+
+#: data/com.texoviva.respite.metainfo.xml.in:26
+msgid "Runs quietly in the background and can start on login"
+msgstr ""
+
+#: data/com.texoviva.respite.metainfo.xml.in:31
+msgid "pawan"
+msgstr ""
+
+#: data/com.texoviva.respite.gschema.xml:7
+msgid "Work interval in seconds"
+msgstr ""
+
+#: data/com.texoviva.respite.gschema.xml:8
+msgid "How long the user works before a break begins. Defaults to 25 minutes."
+msgstr ""
+
+#: data/com.texoviva.respite.gschema.xml:13
+msgid "Break duration in seconds"
+msgstr ""
+
+#: data/com.texoviva.respite.gschema.xml:14
+msgid "How long each break lasts. Defaults to 5 minutes."
+msgstr ""
+
+#: data/com.texoviva.respite.gschema.xml:19
+msgid "Number of postponements allowed per cycle"
+msgstr ""
+
+#: data/com.texoviva.respite.gschema.xml:20
+msgid ""
+"How many times a break may be postponed before it must be taken. Zero "
+"disables postponing."
+msgstr ""
+
+#: data/com.texoviva.respite.gschema.xml:25
+msgid "Postpone duration in seconds"
+msgstr ""
+
+#: data/com.texoviva.respite.gschema.xml:26
+msgid ""
+"How long a break is delayed each time it is postponed. Defaults to 2 minutes."
+msgstr ""
+
+#: data/com.texoviva.respite.gschema.xml:31
+msgid "Pre-break warning in seconds"
+msgstr ""
+
+#: data/com.texoviva.respite.gschema.xml:32
+msgid ""
+"How long before a break to show the warning notification. Zero disables the "
+"warning."
+msgstr ""
+
+#: data/com.texoviva.respite.gschema.xml:36
+msgid "Start Respite automatically on login"
+msgstr ""
+
+#: data/com.texoviva.respite.gschema.xml:37
+msgid "Whether Respite runs as a background daemon when the user logs in."
+msgstr ""
+
+#: src/respite-application.c:191
+msgid "A break is in progress"
+msgstr ""
+
+#: src/respite-application.c:217
+msgid "Break coming up"
+msgstr ""
+
+#. TRANSLATORS: %u is the number of postpones still available.
+#: src/respite-application.c:223
+#, c-format
+msgid "A break is about to start. You can postpone it %u more time."
+msgid_plural "A break is about to start. You can postpone it %u more times."
+msgstr[0] ""
+msgstr[1] ""
+
+#: src/respite-application.c:227 src/respite-window.ui:92
+msgid "Postpone"
+msgstr ""
+
+#: src/respite-application.c:231
+msgid "A break is about to start."
+msgstr ""
+
+#: src/respite-application.c:476
+msgid "A break reminder that blacks out the screen so you actually rest."
+msgstr ""
+
+#: src/respite-application.c:480
+msgid "translator-credits"
+msgstr ""
+
+#: src/respite-application.c:527
+msgid "Run in the background without showing a window"
+msgstr ""
+
+#: src/respite-background.c:247
+msgid ""
+"Respite keeps reminding you to take breaks while running in the background."
+msgstr ""
+
+#: src/respite-background.c:331
+msgid "Respite starts at login so it can remind you to take breaks."
+msgstr ""
+
+#. TRANSLATORS: shown on the break overlay; %02u:%02u is MM:SS remaining.
+#: src/respite-overlay.c:164
+#, c-format
+msgid "Break for %02u:%02u"
+msgstr ""
+
+#: src/respite-overlay.ui:18
+msgid "Break for 00:00"
+msgstr ""
+
+#: src/respite-window.ui:56
+msgid "Main Menu"
+msgstr ""
+
+#: src/respite-window.ui:66
+msgid "Schedule"
+msgstr ""
+
+#: src/respite-window.ui:67
+msgid "How long you work before a break, and how long each break lasts."
+msgstr ""
+
+#: src/respite-window.ui:70
+msgid "Work Interval"
+msgstr ""
+
+#: src/respite-window.ui:71
+msgid "Minutes of work before a break begins"
+msgstr ""
+
+#: src/respite-window.ui:80
+msgid "Break Duration"
+msgstr ""
+
+#: src/respite-window.ui:81
+msgid "Minutes each break lasts"
+msgstr ""
+
+#: src/respite-window.ui:93
+msgid "Let an urgent moment delay a break a limited number of times."
+msgstr ""
+
+#: src/respite-window.ui:96
+msgid "Postpone Allowance"
+msgstr ""
+
+#: src/respite-window.ui:97
+msgid "Times a break may be postponed per cycle (0 disables)"
+msgstr ""
+
+#: src/respite-window.ui:106
+msgid "Postpone Duration"
+msgstr ""
+
+#: src/respite-window.ui:107
+msgid "Minutes a break is delayed each time it is postponed"
+msgstr ""
+
+#: src/respite-window.ui:116
+msgid "Pre-Break Warning"
+msgstr ""
+
+#: src/respite-window.ui:117
+msgid "Seconds before a break to show the warning (0 disables)"
+msgstr ""
+
+#: src/respite-window.ui:128
+msgid "Startup"
+msgstr ""
+
+#: src/respite-window.ui:131
+msgid "Start on Login"
+msgstr ""
+
+#: src/respite-window.ui:132
+msgid "Run Respite in the background when you log in"
+msgstr ""
+
+#: src/respite-window.ui:145
+msgid "_Preferences"
+msgstr ""
+
+#: src/respite-window.ui:149
+msgid "_Keyboard Shortcuts"
+msgstr ""
+
+#: src/respite-window.ui:153
+msgid "_About Respite"
+msgstr ""
+
+#: src/shortcuts-dialog.ui:6
+msgid "Shortcuts"
+msgstr ""
+
+#: src/shortcuts-dialog.ui:9
+msgctxt "shortcut window"
+msgid "Show Shortcuts"
+msgstr ""
+
+#: src/shortcuts-dialog.ui:15
+msgctxt "shortcut window"
+msgid "Quit"
+msgstr ""
