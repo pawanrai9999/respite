@@ -63,6 +63,33 @@
           <object class="AdwPreferencesPage">
             <child>
               <object class="AdwPreferencesGroup">
+                <property name="title" translatable="yes">Status</property>
+                <child>
+                  <object class="AdwActionRow" id="status_row">
+                    <property name="title" translatable="yes">Not running</property>
+                    <child type="prefix">
+                      <object class="GtkImage" id="status_icon">
+                        <property name="icon-name">media-playback-stop-symbolic</property>
+                      </object>
+                    </child>
+                    <child type="suffix">
+                      <object class="GtkButton" id="toggle_button">
+                        <property name="label" translatable="yes">Pause</property>
+                        <property name="valign">center</property>
+                        <property name="action-name">app.toggle-timer</property>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+                <child>
+                  <object class="AdwActionRow" id="postpones_row">
+                    <property name="visible">False</property>
+                  </object>
+                </child>
+              </object>
+            </child>
+            <child>
+              <object class="AdwPreferencesGroup">
                 <property name="title" translatable="yes">Schedule</property>
                 <property name="description" translatable="yes">How long you work before a break, and how long each break lasts.</property>
                 <child>
@@ -152,6 +179,12 @@
       <item>
         <attribute name="label" translatable="yes">_About Respite</attribute>
         <attribute name="action">app.about</attribute>
+      </item>
+    </section>
+    <section>
+      <item>
+        <attribute name="label" translatable="yes">_Quit</attribute>
+        <attribute name="action">app.quit</attribute>
       </item>
     </section>
   </menu>

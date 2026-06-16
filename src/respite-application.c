@@ -338,23 +338,44 @@ respite_application_teardown (RespiteApplication *self)
 	}
 }
 
-/* Enter background/daemon mode: take a hold so the process stays alive with no
- * window. Idempotent, so repeated --daemon launches collapse onto one hold. */
+/* Turn the break engine on or off. Enabling also promotes the process to a
+ * persistent background daemon: it takes a g_application_hold (and asks the
+ * portal to allow running windowless) so the timer keeps counting after the
+ * settings window is closed. Pausing only stops the countdown; the hold is
+ * kept so a paused daemon stays alive and ready to resume, and is released
+ * only when the application actually quits. Idempotent either way. */
 static void
-respite_application_start_daemon (RespiteApplication *self)
+respite_application_set_active (RespiteApplication *self,
+                                gboolean            active)
 {
 	g_assert (RESPITE_IS_APPLICATION (self));
 
-	if (self->held)
-		return;
+	if (active)
+	{
+		if (!self->held)
+		{
+			g_application_hold (G_APPLICATION (self));
+			self->held = TRUE;
 
-	g_application_hold (G_APPLICATION (self));
-	self->held = TRUE;
+			/* Ask the portal to let us keep running with no window (sandbox only). */
+			respite_background_request_run_in_background ();
+		}
 
-	/* Ask the portal to let us keep running with no window (sandbox only). */
-	respite_background_request_run_in_background ();
+		respite_timer_start (self->timer);
+	}
+	else
+	{
+		respite_timer_stop (self->timer);
+	}
+}
 
-	respite_timer_start (self->timer);
+/* Enter background/daemon mode for a --daemon invocation: identical to the user
+ * enabling the timer, so the process runs headless and persists. Idempotent,
+ * so repeated --daemon launches collapse onto one hold. */
+static void
+respite_application_start_daemon (RespiteApplication *self)
+{
+	respite_application_set_active (self, TRUE);
 }
 
 /* The primary instance processes every invocation's command line here, whether
@@ -503,6 +524,23 @@ respite_application_postpone_action (GSimpleAction *action,
 	                                     RESPITE_WARNING_NOTIFICATION_ID);
 }
 
+/* Flip the break engine between running and paused from the status control.
+ * Resuming re-takes the daemon hold if needed so the timer survives the window
+ * closing; pausing leaves the process alive but no longer counting down. */
+static void
+respite_application_toggle_timer_action (GSimpleAction *action,
+                                         GVariant      *parameter,
+                                         gpointer       user_data)
+{
+	RespiteApplication *self = user_data;
+	gboolean running;
+
+	g_assert (RESPITE_IS_APPLICATION (self));
+
+	running = respite_timer_get_state (self->timer) != RESPITE_TIMER_STATE_IDLE;
+	respite_application_set_active (self, !running);
+}
+
 static void
 respite_application_quit_action (GSimpleAction *action,
                                  GVariant      *parameter,
@@ -520,6 +558,7 @@ static const GActionEntry app_actions[] = {
 	{ "quit", respite_application_quit_action },
 	{ "about", respite_application_about_action },
 	{ "postpone", respite_application_postpone_action },
+	{ "toggle-timer", respite_application_toggle_timer_action },
 };
 
 static const GOptionEntry app_options[] = {
