@@ -49,10 +49,11 @@ GType respite_timer_state_get_type (void);
 
 G_DECLARE_FINAL_TYPE (RespiteTimer, respite_timer, RESPITE, TIMER, GObject)
 
-RespiteTimer      *respite_timer_new           (void);
-void               respite_timer_start         (RespiteTimer *self);
-void               respite_timer_stop          (RespiteTimer *self);
-RespiteTimerState  respite_timer_get_state     (RespiteTimer *self);
-guint              respite_timer_get_remaining (RespiteTimer *self);
+RespiteTimer      *respite_timer_new                     (void);
+void               respite_timer_start                   (RespiteTimer *self);
+void               respite_timer_stop                    (RespiteTimer *self);
+RespiteTimerState  respite_timer_get_state               (RespiteTimer *self);
+guint              respite_timer_get_remaining           (RespiteTimer *self);
+guint              respite_timer_get_postpones_remaining (RespiteTimer *self);
 
 G_END_DECLS

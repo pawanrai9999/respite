@@ -45,6 +45,11 @@ struct _RespiteTimer
 	/* Last value broadcast through ::tick, so we only emit on change. */
 	guint              remaining;
 
+	/* Postpones still available in the current work cycle, seeded from the
+	 * postpone-allowance setting at the start of each WORKING phase and spent
+	 * by respite_timer_postpone(). */
+	guint              postpones_remaining;
+
 	guint              tick_source_id;
 };
 
@@ -110,6 +115,9 @@ begin_working (RespiteTimer *self)
 
 	self->deadline = g_get_monotonic_time () + (gint64) work_interval * G_USEC_PER_SEC;
 	self->remaining = work_interval;
+
+	/* Each work cycle starts with a fresh postpone allowance. */
+	self->postpones_remaining = g_settings_get_uint (self->settings, "postpone-allowance");
 
 	set_state (self, RESPITE_TIMER_STATE_WORKING);
 	g_signal_emit (self, signals[SIGNAL_TICK], 0, self->remaining);
@@ -212,6 +220,14 @@ respite_timer_get_remaining (RespiteTimer *self)
 	g_return_val_if_fail (RESPITE_IS_TIMER (self), 0);
 
 	return self->remaining;
+}
+
+guint
+respite_timer_get_postpones_remaining (RespiteTimer *self)
+{
+	g_return_val_if_fail (RESPITE_IS_TIMER (self), 0);
+
+	return self->postpones_remaining;
 }
 
 static void
