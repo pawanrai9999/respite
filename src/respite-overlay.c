@@ -42,9 +42,22 @@ struct _RespiteOverlay
 G_DEFINE_FINAL_TYPE (RespiteOverlay, respite_overlay, GTK_TYPE_WINDOW)
 
 static void
+respite_overlay_dispose (GObject *object)
+{
+	RespiteOverlay *self = RESPITE_OVERLAY (object);
+
+	g_clear_object (&self->monitor);
+
+	G_OBJECT_CLASS (respite_overlay_parent_class)->dispose (object);
+}
+
+static void
 respite_overlay_class_init (RespiteOverlayClass *klass)
 {
+	GObjectClass   *object_class = G_OBJECT_CLASS (klass);
 	GtkWidgetClass *widget_class = GTK_WIDGET_CLASS (klass);
+
+	object_class->dispose = respite_overlay_dispose;
 
 	gtk_widget_class_set_template_from_resource (widget_class, "/com/texoviva/respite/respite-overlay.ui");
 	gtk_widget_class_bind_template_child (widget_class, RespiteOverlay, countdown_label);
@@ -68,7 +81,9 @@ respite_overlay_new (GtkApplication *application,
 	self = g_object_new (RESPITE_TYPE_OVERLAY,
 	                     "application", application,
 	                     NULL);
-	self->monitor = monitor;
+	/* Hold a ref so the GdkMonitor stays alive (valid or not) for as long as
+	 * this overlay does; the hotplug reconciler compares monitors by pointer. */
+	self->monitor = g_object_ref (monitor);
 
 	/* Fullscreen onto this specific monitor before presenting so the window
 	 * maps already covering the right output. */

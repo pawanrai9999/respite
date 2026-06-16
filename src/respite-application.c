@@ -37,6 +37,11 @@ struct _RespiteApplication
 	 * for the duration of a break. Empty while working or idle. */
 	GPtrArray     *overlays;
 
+	/* ::items-changed handler on the monitor list, connected only while a
+	 * break is on screen so hotplugged monitors get covered (and removed
+	 * ones uncovered) mid-break. */
+	gulong         monitors_changed_id;
+
 	/* TRUE once we have taken a g_application_hold to stay alive headless. */
 	gboolean       held;
 };
@@ -72,33 +77,89 @@ respite_application_add_overlay (RespiteApplication *self,
 	gtk_window_present (GTK_WINDOW (overlay));
 }
 
-/* Cover every monitor with its own break overlay, so the nudge is total on a
- * multi-head setup rather than leaving secondary displays usable. */
-static void
-respite_application_show_overlays (RespiteApplication *self)
+static gboolean
+respite_application_monitor_has_overlay (RespiteApplication *self,
+                                         GdkMonitor         *monitor)
 {
-	GListModel *monitors;
-	guint n_monitors;
+	for (guint i = 0; i < self->overlays->len; i++)
+		if (respite_overlay_get_monitor (self->overlays->pdata[i]) == monitor)
+			return TRUE;
 
-	if (self->overlays->len > 0)
-		return;
+	return FALSE;
+}
 
-	monitors = gdk_display_get_monitors (gdk_display_get_default ());
-	n_monitors = g_list_model_get_n_items (monitors);
+/* Reconcile the set of overlays against the current set of monitors: drop
+ * overlays whose monitor has gone away, and add one for any monitor not yet
+ * covered. Used both for the initial cover and on every hotplug mid-break. */
+static void
+respite_application_reconcile_overlays (RespiteApplication *self)
+{
+	GListModel *monitors = gdk_display_get_monitors (gdk_display_get_default ());
+	guint n_monitors = g_list_model_get_n_items (monitors);
 
-	for (guint i = 0; i < n_monitors; i++)
+	/* Remove overlays for monitors no longer present. Walk backwards because
+	 * each removal triggers the array free func and shifts later indices. */
+	for (guint i = self->overlays->len; i > 0; i--)
 	{
-		GdkMonitor *monitor = g_list_model_get_item (monitors, i);
+		GdkMonitor *monitor = respite_overlay_get_monitor (self->overlays->pdata[i - 1]);
+		gboolean present = FALSE;
 
-		respite_application_add_overlay (self, monitor);
+		for (guint j = 0; j < n_monitors && !present; j++)
+		{
+			GdkMonitor *current = g_list_model_get_item (monitors, j);
+
+			present = (current == monitor);
+			g_object_unref (current);
+		}
+
+		if (!present)
+			g_ptr_array_remove_index (self->overlays, i - 1);
+	}
+
+	/* Add overlays for monitors that have appeared. */
+	for (guint j = 0; j < n_monitors; j++)
+	{
+		GdkMonitor *monitor = g_list_model_get_item (monitors, j);
+
+		if (!respite_application_monitor_has_overlay (self, monitor))
+			respite_application_add_overlay (self, monitor);
+
 		g_object_unref (monitor);
 	}
 }
 
-/* Tear down every break overlay. The array's free func destroys each window. */
+/* Cover every monitor with its own break overlay, so the nudge is total on a
+ * multi-head setup rather than leaving secondary displays usable. While the
+ * break is up we track monitor hotplug so the cover stays complete. */
+static void
+respite_application_show_overlays (RespiteApplication *self)
+{
+	GListModel *monitors;
+
+	if (self->overlays->len > 0)
+		return;
+
+	respite_application_reconcile_overlays (self);
+
+	monitors = gdk_display_get_monitors (gdk_display_get_default ());
+	self->monitors_changed_id =
+		g_signal_connect_swapped (monitors, "items-changed",
+		                          G_CALLBACK (respite_application_reconcile_overlays),
+		                          self);
+}
+
+/* Tear down every break overlay and stop tracking hotplug. The array's free
+ * func destroys each window. */
 static void
 respite_application_hide_overlays (RespiteApplication *self)
 {
+	if (self->monitors_changed_id != 0)
+	{
+		GListModel *monitors = gdk_display_get_monitors (gdk_display_get_default ());
+
+		g_clear_signal_handler (&self->monitors_changed_id, monitors);
+	}
+
 	g_ptr_array_set_size (self->overlays, 0);
 }
 
