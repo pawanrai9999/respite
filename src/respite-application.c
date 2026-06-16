@@ -27,6 +27,9 @@
 struct _RespiteApplication
 {
 	AdwApplication parent_instance;
+
+	/* TRUE once we have taken a g_application_hold to stay alive headless. */
+	gboolean       held;
 };
 
 G_DEFINE_FINAL_TYPE (RespiteApplication, respite_application, ADW_TYPE_APPLICATION)
@@ -42,6 +45,42 @@ respite_application_new (const char        *application_id,
 	                     "flags", flags,
 	                     "resource-base-path", "/com/texoviva/respite",
 	                     NULL);
+}
+
+/* Enter background/daemon mode: take a hold so the process stays alive with no
+ * window. Idempotent, so repeated --daemon launches collapse onto one hold. */
+static void
+respite_application_start_daemon (RespiteApplication *self)
+{
+	g_assert (RESPITE_IS_APPLICATION (self));
+
+	if (self->held)
+		return;
+
+	g_application_hold (G_APPLICATION (self));
+	self->held = TRUE;
+}
+
+/* The primary instance processes every invocation's command line here, whether
+ * it was the first launch or a forwarded one from a second process. A
+ * --daemon invocation runs headless; any other presents the settings window. */
+static int
+respite_application_command_line (GApplication            *app,
+                                  GApplicationCommandLine *command_line)
+{
+	RespiteApplication *self = RESPITE_APPLICATION (app);
+	GVariantDict *options;
+
+	g_assert (RESPITE_IS_APPLICATION (self));
+
+	options = g_application_command_line_get_options_dict (command_line);
+
+	if (g_variant_dict_contains (options, "daemon"))
+		respite_application_start_daemon (self);
+	else
+		g_application_activate (app);
+
+	return 0;
 }
 
 static void
@@ -67,6 +106,7 @@ respite_application_class_init (RespiteApplicationClass *klass)
 	GApplicationClass *app_class = G_APPLICATION_CLASS (klass);
 
 	app_class->activate = respite_application_activate;
+	app_class->command_line = respite_application_command_line;
 }
 
 static void
@@ -110,9 +150,17 @@ static const GActionEntry app_actions[] = {
 	{ "about", respite_application_about_action },
 };
 
+static const GOptionEntry app_options[] = {
+	{ "daemon", 'd', G_OPTION_FLAG_NONE, G_OPTION_ARG_NONE, NULL,
+	  N_("Run in the background without showing a window"), NULL },
+	{ NULL },
+};
+
 static void
 respite_application_init (RespiteApplication *self)
 {
+	g_application_add_main_option_entries (G_APPLICATION (self), app_options);
+
 	g_action_map_add_action_entries (G_ACTION_MAP (self),
 	                                 app_actions,
 	                                 G_N_ELEMENTS (app_actions),

@@ -113,7 +113,7 @@ main (int   argc,
 		if (g_strcmp0 (argv[i], "--debug-timer") == 0)
 			return run_debug_timer ();
 
-	app = respite_application_new ("com.texoviva.respite", G_APPLICATION_DEFAULT_FLAGS);
+	app = respite_application_new ("com.texoviva.respite", G_APPLICATION_HANDLES_COMMAND_LINE);
 	ret = g_application_run (G_APPLICATION (app), argc, argv);
 
 	return ret;
