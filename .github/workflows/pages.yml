@@ -40,6 +40,10 @@ jobs:
         env:
           KEYID: ${{ secrets.GPG_KEY_ID }}
         run: |
+          # The raw builder image has no flathub remote (the flatpak-builder
+          # action would add it); add it so --install-deps-from can pull the
+          # GNOME 50 runtime/SDK.
+          flatpak remote-add --user --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
           flatpak-builder --user --disable-rofiles-fuse --install-deps-from=flathub \
             --force-clean --repo=repo --gpg-sign="$KEYID" --gpg-homedir="$GNUPGHOME" \
             _build io.github.pawanrai9999.respite.json
