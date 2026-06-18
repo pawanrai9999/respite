@@ -32,7 +32,7 @@ Flatpak build (manifest `io.github.pawanrai9999.respite.json`, GNOME Platform/SD
 flatpak-builder --user --install _flatpak io.github.pawanrai9999.respite.json
 ```
 
-Note: the manifest's git source points at `file:///home/pawan/Projects`, so a Flatpak build pulls committed code from that path rather than the working tree.
+Note: the manifest's git source points at the GitHub remote pinned to the released `0.1.0` tag/commit (for Flathub), so a Flatpak build pulls that published commit rather than the working tree. To build the local checkout instead, override the source to `{"type": "dir", "path": "."}` (as the CI workflow does).
 
 There is no test suite or linter configured. Build warnings are extensive (see the `test_c_args` list in the top-level `meson.build`) but `werror=false`, so warnings do not fail the build.
 
