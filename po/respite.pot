@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: respite\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-06-18 08:02+0530\n"
+"POT-Creation-Date: 2026-06-18 12:32+0530\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,82 +18,82 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\n"
 
-#: data/com.texoviva.respite.desktop.in:2
-#: data/com.texoviva.respite.metainfo.xml.in:7 src/respite-application.c:506
-#: src/respite-window.ui:45
+#: data/io.github.pawanrai9999.respite.desktop.in:2
+#: data/io.github.pawanrai9999.respite.metainfo.xml.in:7
+#: src/respite-application.c:506 src/respite-window.ui:45
 msgid "Respite"
 msgstr ""
 
-#: data/com.texoviva.respite.desktop.in:3
-#: data/com.texoviva.respite.metainfo.xml.in:8
+#: data/io.github.pawanrai9999.respite.desktop.in:3
+#: data/io.github.pawanrai9999.respite.metainfo.xml.in:8
 msgid "Take regular breaks from the screen"
 msgstr ""
 
-#: data/com.texoviva.respite.desktop.in:9
+#: data/io.github.pawanrai9999.respite.desktop.in:9
 msgid "break;timer;rest;health;pomodoro;eyes;"
 msgstr ""
 
-#: data/com.texoviva.respite.gschema.xml:7
+#: data/io.github.pawanrai9999.respite.gschema.xml:7
 msgid "Work interval in seconds"
 msgstr ""
 
-#: data/com.texoviva.respite.gschema.xml:8
+#: data/io.github.pawanrai9999.respite.gschema.xml:8
 msgid "How long the user works before a break begins. Defaults to 25 minutes."
 msgstr ""
 
-#: data/com.texoviva.respite.gschema.xml:13
+#: data/io.github.pawanrai9999.respite.gschema.xml:13
 msgid "Break duration in seconds"
 msgstr ""
 
-#: data/com.texoviva.respite.gschema.xml:14
+#: data/io.github.pawanrai9999.respite.gschema.xml:14
 msgid "How long each break lasts. Defaults to 5 minutes."
 msgstr ""
 
-#: data/com.texoviva.respite.gschema.xml:19
+#: data/io.github.pawanrai9999.respite.gschema.xml:19
 msgid "Number of postponements allowed per cycle"
 msgstr ""
 
-#: data/com.texoviva.respite.gschema.xml:20
+#: data/io.github.pawanrai9999.respite.gschema.xml:20
 msgid ""
 "How many times a break may be postponed before it must be taken. Zero "
 "disables postponing."
 msgstr ""
 
-#: data/com.texoviva.respite.gschema.xml:25
+#: data/io.github.pawanrai9999.respite.gschema.xml:25
 msgid "Postpone duration in seconds"
 msgstr ""
 
-#: data/com.texoviva.respite.gschema.xml:26
+#: data/io.github.pawanrai9999.respite.gschema.xml:26
 msgid ""
 "How long a break is delayed each time it is postponed. Defaults to 2 minutes."
 msgstr ""
 
-#: data/com.texoviva.respite.gschema.xml:31
+#: data/io.github.pawanrai9999.respite.gschema.xml:31
 msgid "Pre-break warning in seconds"
 msgstr ""
 
-#: data/com.texoviva.respite.gschema.xml:32
+#: data/io.github.pawanrai9999.respite.gschema.xml:32
 msgid ""
 "How long before a break to show the warning notification. Zero disables the "
 "warning."
 msgstr ""
 
-#: data/com.texoviva.respite.gschema.xml:36
+#: data/io.github.pawanrai9999.respite.gschema.xml:36
 msgid "Start Respite automatically on login"
 msgstr ""
 
-#: data/com.texoviva.respite.gschema.xml:37
+#: data/io.github.pawanrai9999.respite.gschema.xml:37
 msgid "Whether Respite runs as a background daemon when the user logs in."
 msgstr ""
 
-#: data/com.texoviva.respite.metainfo.xml.in:10
+#: data/io.github.pawanrai9999.respite.metainfo.xml.in:10
 msgid ""
 "Respite helps you protect your eyes, posture, and focus by enforcing regular "
 "breaks while you work. You set how long you want to work and how long each "
 "break should last, and Respite takes care of the rest."
 msgstr ""
 
-#: data/com.texoviva.respite.metainfo.xml.in:15
+#: data/io.github.pawanrai9999.respite.metainfo.xml.in:15
 msgid ""
 "When the work interval elapses, Respite blacks out every monitor with a "
 "centered countdown until the break is over. Breaks are not infinitely "
@@ -101,35 +101,35 @@ msgid ""
 "an urgent moment without skipping breaks entirely."
 msgstr ""
 
-#: data/com.texoviva.respite.metainfo.xml.in:21
+#: data/io.github.pawanrai9999.respite.metainfo.xml.in:21
 msgid "Features:"
 msgstr ""
 
-#: data/com.texoviva.respite.metainfo.xml.in:23
+#: data/io.github.pawanrai9999.respite.metainfo.xml.in:23
 msgid "Configurable work interval and break duration"
 msgstr ""
 
-#: data/com.texoviva.respite.metainfo.xml.in:24
+#: data/io.github.pawanrai9999.respite.metainfo.xml.in:24
 msgid "Full-screen break overlay across every connected monitor"
 msgstr ""
 
-#: data/com.texoviva.respite.metainfo.xml.in:25
+#: data/io.github.pawanrai9999.respite.metainfo.xml.in:25
 msgid "Pre-break warning with a limited postpone allowance"
 msgstr ""
 
-#: data/com.texoviva.respite.metainfo.xml.in:26
+#: data/io.github.pawanrai9999.respite.metainfo.xml.in:26
 msgid "Runs quietly in the background and can start on login"
 msgstr ""
 
-#: data/com.texoviva.respite.metainfo.xml.in:33
+#: data/io.github.pawanrai9999.respite.metainfo.xml.in:33
 msgid "Set your work interval, break length, and postpone allowance"
 msgstr ""
 
-#: data/com.texoviva.respite.metainfo.xml.in:37
+#: data/io.github.pawanrai9999.respite.metainfo.xml.in:37
 msgid "A full-screen countdown covers every monitor during a break"
 msgstr ""
 
-#: data/com.texoviva.respite.metainfo.xml.in:42
+#: data/io.github.pawanrai9999.respite.metainfo.xml.in:42
 msgid "Pawan"
 msgstr ""
 

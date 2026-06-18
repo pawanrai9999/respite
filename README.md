@@ -146,11 +146,11 @@ flatpak run --filesystem="$PWD" --command=sh org.gnome.Sdk//50 -c \
 ### Flatpak
 
 ```sh
-flatpak-builder --user --install _flatpak com.texoviva.respite.json
-flatpak run com.texoviva.respite
+flatpak-builder --user --install _flatpak io.github.pawanrai9999.respite.json
+flatpak run io.github.pawanrai9999.respite
 ```
 
-The manifest (`com.texoviva.respite.json`) builds against GNOME Platform/SDK 50.
+The manifest (`io.github.pawanrai9999.respite.json`) builds against GNOME Platform/SDK 50.
 Its git source points at the local checkout, so a Flatpak build pulls **committed**
 code — commit your changes before building.
 
@@ -172,7 +172,7 @@ code — commit your changes before building.
 - **UI** is defined in GtkBuilder `.ui` templates under `src/`, bundled via
   `src/respite.gresource.xml`.
 - **Settings** live in the GSettings schema
-  `data/com.texoviva.respite.gschema.xml`; durations are stored in seconds and
+  `data/io.github.pawanrai9999.respite.gschema.xml`; durations are stored in seconds and
   presented as minutes in the UI.
 - **Translations:** wrap user-facing strings in `_()` and add new translatable
   source files to `po/POTFILES.in`.

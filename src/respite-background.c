@@ -250,7 +250,7 @@ respite_background_request_run_in_background (void)
 
 /* The XDG autostart entry used when running outside the sandbox. The desktop
  * id matches the app id so it sits beside other autostart entries cleanly. */
-#define AUTOSTART_DESKTOP_ID "com.texoviva.respite.desktop"
+#define AUTOSTART_DESKTOP_ID "io.github.pawanrai9999.respite.desktop"
 
 static char *
 native_autostart_path (void)

@@ -2,7 +2,7 @@
 Name=Respite
 Comment=Take regular breaks from the screen
 Exec=respite
-Icon=com.texoviva.respite
+Icon=io.github.pawanrai9999.respite
 Terminal=false
 Type=Application
 Categories=Utility;GTK;

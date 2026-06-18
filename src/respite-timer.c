@@ -381,6 +381,6 @@ respite_timer_class_init (RespiteTimerClass *klass)
 static void
 respite_timer_init (RespiteTimer *self)
 {
-	self->settings = g_settings_new ("com.texoviva.respite");
+	self->settings = g_settings_new ("io.github.pawanrai9999.respite");
 	self->state = RESPITE_TIMER_STATE_IDLE;
 }

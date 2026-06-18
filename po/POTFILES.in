@@ -1,8 +1,8 @@
 # List of source files containing translatable strings.
 # Please keep this file sorted alphabetically.
-data/com.texoviva.respite.desktop.in
-data/com.texoviva.respite.gschema.xml
-data/com.texoviva.respite.metainfo.xml.in
+data/io.github.pawanrai9999.respite.desktop.in
+data/io.github.pawanrai9999.respite.gschema.xml
+data/io.github.pawanrai9999.respite.metainfo.xml.in
 src/main.c
 src/respite-application.c
 src/respite-background.c

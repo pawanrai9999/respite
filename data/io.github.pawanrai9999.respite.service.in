@@ -1,3 +1,3 @@
 [D-BUS Service]
-Name=com.texoviva.respite
+Name=io.github.pawanrai9999.respite
 Exec=@bindir@/respite --gapplication-service

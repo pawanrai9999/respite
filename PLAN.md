@@ -24,13 +24,13 @@ These choices drive every phase below:
 
 - Durations are stored in **seconds** in GSettings; the UI presents minutes where sensible.
 - Live settings changes apply to the **next** cycle, not the one in progress.
-- App ID / namespace: `com.texoviva.respite`; GResource base path `/com/texoviva/respite`; C symbols use the `respite_` / `RESPITE_` / `Respite` prefixes.
+- App ID / namespace: `io.github.pawanrai9999.respite`; GResource base path `/io/github/pawanrai9999/respite`; C symbols use the `respite_` / `RESPITE_` / `Respite` prefixes.
 
 ---
 
 ## Phase 1 — Settings foundation
 
-- **1.1** Define GSettings keys in `data/com.texoviva.respite.gschema.xml`: `work-interval` (uint, sec), `break-duration` (uint, sec), `postpone-allowance` (uint), `postpone-duration` (uint, sec), `pre-break-warning` (uint, sec), `autostart` (bool). Add ranges/defaults.
+- **1.1** Define GSettings keys in `data/io.github.pawanrai9999.respite.gschema.xml`: `work-interval` (uint, sec), `break-duration` (uint, sec), `postpone-allowance` (uint), `postpone-duration` (uint, sec), `pre-break-warning` (uint, sec), `autostart` (bool). Add ranges/defaults.
 - **1.2** Verify the schema compiles (`glib-compile-schemas`) and is reachable at runtime.
 - **1.3** Replace the template "Hello World" content in `respite-window.ui` with an Adwaita preferences layout (one row per setting).
 - **1.4** Wire each control two-way to GSettings via `g_settings_bind`.
@@ -77,13 +77,13 @@ These choices drive every phase below:
 - **6.2** Implement the Background portal request (run-in-background) on daemon startup.
 - **6.3** Implement autostart via the Background portal `RequestAutostart`, launching with `--daemon`.
 - **6.4** Wire the `autostart` GSettings key ↔ portal autostart state (toggle in the settings UI).
-- **6.5** Native fallback: install `~/.config/autostart/com.texoviva.respite.desktop` when not sandboxed.
+- **6.5** Native fallback: install `~/.config/autostart/io.github.pawanrai9999.respite.desktop` when not sandboxed.
 
 ## Phase 7 — Polish & release readiness
 
 - **7.1** *(Optional — skipped)* Idle handling: pause/restart the work cycle when the session is idle/locked (via the Inhibit/idle portal where available; degrade gracefully if not). Flagged optional because sandboxed idle detection on GNOME is unreliable; left unimplemented.
 - **7.2** ✅ Inhibit suspend/screensaver during an active break so the overlay is not interrupted — `gtk_application_inhibit()` held across each break in `RespiteApplication`.
-- **7.3** ✅ Finalize the About dialog, app name/icon, and `data/com.texoviva.respite.metainfo.xml` (AppStream) — template placeholders replaced; desktop entry keywords/comment added.
+- **7.3** ✅ Finalize the About dialog, app name/icon, and `data/io.github.pawanrai9999.respite.metainfo.xml` (AppStream) — template placeholders replaced; desktop entry keywords/comment added.
 - **7.4** ✅ Update `po/POTFILES.in`, wrap all user-facing strings in `_()`, regenerate the translation template — `shortcuts-dialog.ui` added to POTFILES; `po/respite.pot` regenerated.
 - **7.5** ✅ Remove the `--debug-timer` scaffolding (or hide it behind a build option) — removed from `main.c`.
 - **7.6** ✅ Final Flatpak build + manual smoke test of the full work → warn → break → postpone → autostart loop — manifest fixed to build (runtime 50, correct git source) and verified via meson build + validation tests under the SDK runtime; interactive on-session smoke test left to the maintainer (no flatpak-builder CLI / display in CI).

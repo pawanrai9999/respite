@@ -35,7 +35,7 @@ main (int   argc,
 	bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
 	textdomain (GETTEXT_PACKAGE);
 
-	app = respite_application_new ("com.texoviva.respite", G_APPLICATION_HANDLES_COMMAND_LINE);
+	app = respite_application_new ("io.github.pawanrai9999.respite", G_APPLICATION_HANDLES_COMMAND_LINE);
 	ret = g_application_run (G_APPLICATION (app), argc, argv);
 
 	return ret;

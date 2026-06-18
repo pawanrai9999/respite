@@ -1,4 +1,4 @@
-application_id = 'com.texoviva.respite'
+application_id = 'io.github.pawanrai9999.respite'
 
 scalable_dir = 'hicolor' / 'scalable' / 'apps'
 install_data(

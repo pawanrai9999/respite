@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <schemalist gettext-domain="respite">
-	<schema id="com.texoviva.respite" path="/com/texoviva/respite/">
+	<schema id="io.github.pawanrai9999.respite" path="/io/github/pawanrai9999/respite/">
 		<key name="work-interval" type="u">
 			<default>1500</default>
 			<range min="60" max="14400"/>

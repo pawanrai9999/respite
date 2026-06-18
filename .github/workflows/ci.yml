@@ -23,7 +23,7 @@ jobs:
         # Stricter, Flathub-specific checks (finish-args, module layout, pinned
         # sources) beyond the generic appstream/desktop validation in the build
         # job. Runs on the committed manifest, which targets the released tag.
-        run: flatpak-builder-lint --gha-format manifest com.texoviva.respite.json
+        run: flatpak-builder-lint --gha-format manifest io.github.pawanrai9999.respite.json
 
   flatpak:
     name: Flatpak build (GNOME 50)
@@ -41,7 +41,7 @@ jobs:
         # checkout, so pushes and pull requests are actually exercised rather
         # than re-building an already-published tag.
         run: |
-          python3 -c "import json; m = json.load(open('com.texoviva.respite.json')); m['modules'][-1]['sources'] = [{'type': 'dir', 'path': '.'}]; json.dump(m, open('ci-manifest.json', 'w'), indent=4)"
+          python3 -c "import json; m = json.load(open('io.github.pawanrai9999.respite.json')); m['modules'][-1]['sources'] = [{'type': 'dir', 'path': '.'}]; json.dump(m, open('ci-manifest.json', 'w'), indent=4)"
 
       - name: Build Flatpak and run validation tests
         uses: flatpak/flatpak-github-actions/flatpak-builder@v6

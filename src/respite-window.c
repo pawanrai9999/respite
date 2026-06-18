@@ -214,7 +214,7 @@ respite_window_class_init (RespiteWindowClass *klass)
 
 	object_class->dispose = respite_window_dispose;
 
-	gtk_widget_class_set_template_from_resource (widget_class, "/com/texoviva/respite/respite-window.ui");
+	gtk_widget_class_set_template_from_resource (widget_class, "/io/github/pawanrai9999/respite/respite-window.ui");
 	gtk_widget_class_bind_template_child (widget_class, RespiteWindow, status_icon);
 	gtk_widget_class_bind_template_child (widget_class, RespiteWindow, status_row);
 	gtk_widget_class_bind_template_child (widget_class, RespiteWindow, toggle_button);
@@ -232,7 +232,7 @@ respite_window_init (RespiteWindow *self)
 {
 	gtk_widget_init_template (GTK_WIDGET (self));
 
-	self->settings = g_settings_new ("com.texoviva.respite");
+	self->settings = g_settings_new ("io.github.pawanrai9999.respite");
 
 	/* The application (and thus the shared timer) is attached after
 	 * construction, so wire the status group up once it arrives. */

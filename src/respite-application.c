@@ -69,7 +69,7 @@ respite_application_new (const char        *application_id,
 	return g_object_new (RESPITE_TYPE_APPLICATION,
 	                     "application-id", application_id,
 	                     "flags", flags,
-	                     "resource-base-path", "/com/texoviva/respite",
+	                     "resource-base-path", "/io/github/pawanrai9999/respite",
 	                     NULL);
 }
 
@@ -302,7 +302,7 @@ respite_application_startup (GApplication *app)
 
 	G_APPLICATION_CLASS (respite_application_parent_class)->startup (app);
 
-	self->settings = g_settings_new ("com.texoviva.respite");
+	self->settings = g_settings_new ("io.github.pawanrai9999.respite");
 	self->autostart_changed_id =
 		g_signal_connect_swapped (self->settings, "changed::autostart",
 		                          G_CALLBACK (respite_application_autostart_changed),
@@ -504,11 +504,11 @@ respite_application_about_action (GSimpleAction *action,
 
 	adw_show_about_dialog (GTK_WIDGET (window),
 	                       "application-name", _("Respite"),
-	                       "application-icon", "com.texoviva.respite",
+	                       "application-icon", "io.github.pawanrai9999.respite",
 	                       "developer-name", "pawan",
 	                       "comments", _("A break reminder that blacks out the screen so you actually rest."),
-	                       "website", "https://github.com/texoviva/respite",
-	                       "issue-url", "https://github.com/texoviva/respite/issues",
+	                       "website", "https://github.com/pawanrai9999/respite",
+	                       "issue-url", "https://github.com/pawanrai9999/respite/issues",
 	                       "license-type", GTK_LICENSE_AGPL_3_0,
 	                       "translator-credits", _("translator-credits"),
 	                       "version", PACKAGE_VERSION,
