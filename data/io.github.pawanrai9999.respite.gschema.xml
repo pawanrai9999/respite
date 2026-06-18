@@ -31,6 +31,11 @@
 			<summary>Pre-break warning in seconds</summary>
 			<description>How long before a break to show the warning notification. Zero disables the warning.</description>
 		</key>
+		<key name="sound-effects" type="b">
+			<default>true</default>
+			<summary>Play sound effects at the start and end of a break</summary>
+			<description>Whether a short sound is played when a break begins and when it ends.</description>
+		</key>
 		<key name="autostart" type="b">
 			<default>false</default>
 			<summary>Start Respite automatically on login</summary>

@@ -152,6 +152,17 @@
             </child>
             <child>
               <object class="AdwPreferencesGroup">
+                <property name="title" translatable="yes">Sound</property>
+                <child>
+                  <object class="AdwSwitchRow" id="sound_effects_row">
+                    <property name="title" translatable="yes">Sound Effects</property>
+                    <property name="subtitle" translatable="yes">Play a sound when a break begins and ends</property>
+                  </object>
+                </child>
+              </object>
+            </child>
+            <child>
+              <object class="AdwPreferencesGroup">
                 <property name="title" translatable="yes">Startup</property>
                 <child>
                   <object class="AdwSwitchRow" id="autostart_row">

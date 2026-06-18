@@ -56,6 +56,12 @@ struct _RespiteApplication
 	 * inhibitor against suspend/idle, so the overlay is not cut short by the
 	 * machine sleeping or the screensaver engaging. Zero when not inhibiting. */
 	guint          inhibit_cookie;
+
+	/* Owning list of media streams currently playing the break start/end
+	 * cues. A stream is held here for the duration of its playback and dropped
+	 * once it ends (or errors), so a sound is not cut off by losing its last
+	 * reference and the app still owns it for teardown on quit. */
+	GPtrArray     *sounds;
 };
 
 G_DEFINE_FINAL_TYPE (RespiteApplication, respite_application, ADW_TYPE_APPLICATION)
@@ -236,9 +242,56 @@ respite_application_on_warning (RespiteApplication *self,
 	                                 RESPITE_WARNING_NOTIFICATION_ID, notification);
 }
 
+/* Resource paths of the break cues, bundled in the gresource. */
+#define RESPITE_BREAK_START_SOUND "/io/github/pawanrai9999/respite/sounds/break_time_start_sound.mp3"
+#define RESPITE_BREAK_END_SOUND   "/io/github/pawanrai9999/respite/sounds/break_time_end_sound.mp3"
+
+/* A cue has finished (or failed): drop it from the owning list so the stream is
+ * freed. The notify holds a reference across emission, so removing (and thus
+ * unreffing) here is safe even when this is the last reference. */
+static void
+respite_application_sound_finished (GtkMediaStream *stream,
+                                    GParamSpec     *pspec,
+                                    gpointer        user_data)
+{
+	RespiteApplication *self = user_data;
+
+	if (gtk_media_stream_get_ended (stream) ||
+	    gtk_media_stream_get_error (stream) != NULL)
+		g_ptr_array_remove (self->sounds, stream);
+}
+
+/* Play a break cue, honouring the sound-effects preference. The stream is kept
+ * alive in @sounds until it ends, since a GtkMediaStream stops the moment its
+ * last reference goes away. A missing audio backend or codec just fails the
+ * stream quietly — the break itself is unaffected. */
+static void
+respite_application_play_sound (RespiteApplication *self,
+                                const char         *resource_path)
+{
+	GtkMediaStream *stream;
+
+	if (!g_settings_get_boolean (self->settings, "sound-effects"))
+		return;
+
+	stream = gtk_media_file_new_for_resource (resource_path);
+
+	/* The array owns the reference returned by the constructor. */
+	g_ptr_array_add (self->sounds, stream);
+
+	g_signal_connect (stream, "notify::ended",
+	                  G_CALLBACK (respite_application_sound_finished), self);
+	g_signal_connect (stream, "notify::error",
+	                  G_CALLBACK (respite_application_sound_finished), self);
+
+	gtk_media_stream_play (stream);
+}
+
 static void
 respite_application_on_break_started (RespiteApplication *self)
 {
+	respite_application_play_sound (self, RESPITE_BREAK_START_SOUND);
+
 	/* The break is here; the warning (and its Postpone offer) is moot. */
 	g_application_withdraw_notification (G_APPLICATION (self),
 	                                     RESPITE_WARNING_NOTIFICATION_ID);
@@ -252,6 +305,7 @@ respite_application_on_break_ended (RespiteApplication *self)
 {
 	respite_application_hide_overlays (self);
 	respite_application_uninhibit (self);
+	respite_application_play_sound (self, RESPITE_BREAK_END_SOUND);
 }
 
 /* Push the countdown to every live overlay. Outside a break the array is
@@ -461,6 +515,7 @@ respite_application_dispose (GObject *object)
 	RespiteApplication *self = RESPITE_APPLICATION (object);
 
 	g_clear_pointer (&self->overlays, g_ptr_array_unref);
+	g_clear_pointer (&self->sounds, g_ptr_array_unref);
 	g_clear_object (&self->timer);
 	g_clear_object (&self->settings);
 
@@ -585,6 +640,7 @@ respite_application_init (RespiteApplication *self)
 	/* Overlays are destroyed (not just unreffed) on removal, so the array's
 	 * free func tears down each window. */
 	self->overlays = g_ptr_array_new_with_free_func ((GDestroyNotify) gtk_window_destroy);
+	self->sounds = g_ptr_array_new_with_free_func (g_object_unref);
 
 	g_application_add_main_option_entries (G_APPLICATION (self), app_options);
 

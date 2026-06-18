@@ -48,6 +48,7 @@ struct _RespiteWindow
 	AdwSpinRow          *postpone_allowance_row;
 	AdwSpinRow          *postpone_duration_row;
 	AdwSpinRow          *pre_break_warning_row;
+	AdwSwitchRow        *sound_effects_row;
 	AdwSwitchRow        *autostart_row;
 };
 
@@ -224,6 +225,7 @@ respite_window_class_init (RespiteWindowClass *klass)
 	gtk_widget_class_bind_template_child (widget_class, RespiteWindow, postpone_allowance_row);
 	gtk_widget_class_bind_template_child (widget_class, RespiteWindow, postpone_duration_row);
 	gtk_widget_class_bind_template_child (widget_class, RespiteWindow, pre_break_warning_row);
+	gtk_widget_class_bind_template_child (widget_class, RespiteWindow, sound_effects_row);
 	gtk_widget_class_bind_template_child (widget_class, RespiteWindow, autostart_row);
 }
 
@@ -265,6 +267,9 @@ respite_window_init (RespiteWindow *self)
 	                 G_SETTINGS_BIND_DEFAULT);
 	g_settings_bind (self->settings, "pre-break-warning",
 	                 self->pre_break_warning_row, "value",
+	                 G_SETTINGS_BIND_DEFAULT);
+	g_settings_bind (self->settings, "sound-effects",
+	                 self->sound_effects_row, "active",
 	                 G_SETTINGS_BIND_DEFAULT);
 	g_settings_bind (self->settings, "autostart",
 	                 self->autostart_row, "active",
