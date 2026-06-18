@@ -113,6 +113,35 @@ roadmap and what was deliberately left out.
 
 ---
 
+## Install
+
+Respite is distributed as a **signed [Flatpak](https://flatpak.org/)** from a
+self-hosted repo on GitHub Pages. First make sure you have `flatpak` and the
+Flathub remote (the GNOME runtime is pulled from there):
+
+```sh
+flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+```
+
+**One-line install** — adds the signed remote and installs the app:
+
+```sh
+flatpak install --user https://pawanrai9999.github.io/respite/respite.flatpakref
+flatpak run io.github.pawanrai9999.respite
+```
+
+**Or** add the repo and install by name:
+
+```sh
+flatpak remote-add --if-not-exists respite https://pawanrai9999.github.io/respite/respite.flatpakrepo
+flatpak install --user respite io.github.pawanrai9999.respite
+```
+
+The repo is GPG-signed, so installs and updates are verified automatically — no
+`--no-gpg-verify` needed. Update with `flatpak update io.github.pawanrai9999.respite`.
+
+---
+
 ## Building & Running
 
 Respite is a standard Meson project that needs the GTK4 and libadwaita

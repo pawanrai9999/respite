@@ -1,0 +1,115 @@
+name: Pages (Flatpak repo)
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Build a signed OSTree repo from the manifest and publish it to GitHub Pages,
+# so users can install Respite from https://pawanrai9999.github.io/respite/ .
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build & sign Flatpak repo
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/flathub-infra/flatpak-github-actions:gnome-48
+      options: --privileged
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Import the signing key
+        env:
+          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+        run: |
+          export GNUPGHOME="$RUNNER_TEMP/gnupg"
+          mkdir -p "$GNUPGHOME"; chmod 700 "$GNUPGHOME"
+          printf '%s' "$GPG_PRIVATE_KEY" | gpg --batch --import
+          echo "GNUPGHOME=$GNUPGHOME" >> "$GITHUB_ENV"
+
+      - name: Build and sign the OSTree repo
+        env:
+          KEYID: ${{ secrets.GPG_KEY_ID }}
+        run: |
+          flatpak-builder --user --disable-rofiles-fuse --install-deps-from=flathub \
+            --force-clean --repo=repo --gpg-sign="$KEYID" --gpg-homedir="$GNUPGHOME" \
+            _build io.github.pawanrai9999.respite.json
+          flatpak build-update-repo repo --generate-static-deltas --prune \
+            --title=Respite --gpg-sign="$KEYID" --gpg-homedir="$GNUPGHOME"
+
+      - name: Assemble the Pages site
+        env:
+          KEYID: ${{ secrets.GPG_KEY_ID }}
+        run: |
+          base_url="https://pawanrai9999.github.io/respite"
+          mkdir -p _site
+          cp -a repo _site/repo
+          gpg --export "$KEYID" > _site/respite.gpg
+          gpgkey=$(base64 -w0 _site/respite.gpg)
+          cat > _site/respite.flatpakrepo <<EOF
+          [Flatpak Repo]
+          Title=Respite
+          Url=$base_url/repo/
+          Homepage=https://github.com/pawanrai9999/respite
+          Comment=Break reminder for the GNOME desktop
+          GPGKey=$gpgkey
+          EOF
+          cat > _site/respite.flatpakref <<EOF
+          [Flatpak Ref]
+          Name=io.github.pawanrai9999.respite
+          Branch=master
+          Url=$base_url/repo/
+          Title=Respite
+          Homepage=https://github.com/pawanrai9999/respite
+          RuntimeRepo=https://flathub.org/repo/flathub.flatpakrepo
+          IsRuntime=false
+          GPGKey=$gpgkey
+          EOF
+          cat > _site/index.html <<'EOF'
+          <!doctype html>
+          <html lang="en">
+          <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1">
+          <title>Respite — Flatpak repo</title>
+          <style>body{font-family:system-ui,sans-serif;max-width:42rem;margin:3rem auto;padding:0 1rem;line-height:1.6}code,pre{background:#f4f4f4;border-radius:4px}pre{padding:1rem;overflow:auto}code{padding:.1rem .3rem}</style>
+          </head>
+          <body>
+          <h1>Respite</h1>
+          <p>A break-reminder app for the GNOME desktop. This is its signed Flatpak repository.</p>
+          <h2>Install</h2>
+          <pre><code>flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+          flatpak install --user https://pawanrai9999.github.io/respite/respite.flatpakref
+          flatpak run io.github.pawanrai9999.respite</code></pre>
+          <p>The repository is GPG-signed; installs and updates are verified automatically.</p>
+          <p><a href="https://github.com/pawanrai9999/respite">Source &amp; documentation on GitHub</a></p>
+          </body>
+          </html>
+          EOF
+          echo "--- generated site ---"; ls -R _site | head -30
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    name: Deploy to GitHub Pages
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4
