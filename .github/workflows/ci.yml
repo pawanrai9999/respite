@@ -1,0 +1,36 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  flatpak:
+    name: Flatpak build (GNOME 50)
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/flathub-infra/flatpak-github-actions:gnome-48
+      options: --privileged
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build against this checkout
+        # The committed manifest pulls the tagged release from GitHub so it is
+        # ready for Flathub submission. For CI we instead build the code in this
+        # checkout, so pushes and pull requests are actually exercised rather
+        # than re-building an already-published tag.
+        run: |
+          python3 -c "import json; m = json.load(open('com.texoviva.respite.json')); m['modules'][-1]['sources'] = [{'type': 'dir', 'path': '.'}]; json.dump(m, open('ci-manifest.json', 'w'), indent=4)"
+
+      - name: Build Flatpak and run validation tests
+        uses: flatpak/flatpak-github-actions/flatpak-builder@v6
+        with:
+          bundle: respite.flatpak
+          manifest-path: ci-manifest.json
+          cache-key: flatpak-builder-${{ github.sha }}
+          run-tests: true

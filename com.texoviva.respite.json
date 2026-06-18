@@ -30,7 +30,8 @@
             "sources" : [
                 {
                     "type" : "git",
-                    "url" : "file:///home/pawan/Projects/Respite"
+                    "url" : "https://github.com/pawanrai9999/respite.git",
+                    "tag" : "0.1.0"
                 }
             ],
             "config-opts" : [

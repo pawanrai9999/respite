@@ -27,13 +27,24 @@
     </ul>
   </description>
 
+  <screenshots>
+    <screenshot type="default">
+      <image>https://raw.githubusercontent.com/pawanrai9999/respite/main/data/screenshots/preferences.png</image>
+      <caption>Set your work interval, break length, and postpone allowance</caption>
+    </screenshot>
+    <screenshot>
+      <image>https://raw.githubusercontent.com/pawanrai9999/respite/main/data/screenshots/break.png</image>
+      <caption>A full-screen countdown covers every monitor during a break</caption>
+    </screenshot>
+  </screenshots>
+
   <developer id="com.texoviva">
-    <name>pawan</name>
+    <name>Pawan</name>
   </developer>
 
-  <url type="homepage">https://github.com/texoviva/respite</url>
-  <url type="vcs-browser">https://github.com/texoviva/respite</url>
-  <url type="bugtracker">https://github.com/texoviva/respite/issues</url>
+  <url type="homepage">https://github.com/pawanrai9999/respite</url>
+  <url type="vcs-browser">https://github.com/pawanrai9999/respite</url>
+  <url type="bugtracker">https://github.com/pawanrai9999/respite/issues</url>
 
   <translation type="gettext">respite</translation>
   <!-- All graphical applications having a desktop file must have this tag in the MetaInfo.
