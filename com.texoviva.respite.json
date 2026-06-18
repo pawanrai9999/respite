@@ -31,7 +31,8 @@
                 {
                     "type" : "git",
                     "url" : "https://github.com/pawanrai9999/respite.git",
-                    "tag" : "0.1.0"
+                    "tag" : "0.1.0",
+                    "commit" : "22b706efe9add1177f810e8b7ded64f92b9ddc0a"
                 }
             ],
             "config-opts" : [

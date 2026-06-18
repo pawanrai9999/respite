@@ -9,6 +9,22 @@ permissions:
   contents: read
 
 jobs:
+  manifest-lint:
+    name: Flathub manifest lint
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/flathub/flatpak-builder-lint:latest
+      options: --privileged
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Lint the Flathub manifest
+        # Stricter, Flathub-specific checks (finish-args, module layout, pinned
+        # sources) beyond the generic appstream/desktop validation in the build
+        # job. Runs on the committed manifest, which targets the released tag.
+        run: flatpak-builder-lint --gha-format manifest com.texoviva.respite.json
+
   flatpak:
     name: Flatpak build (GNOME 50)
     runs-on: ubuntu-latest
