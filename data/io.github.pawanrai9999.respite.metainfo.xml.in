@@ -59,6 +59,13 @@
   </branding>
 
   <releases>
+    <release version="0.2.0" date="2026-06-18">
+      <description translate="no">
+        <ul>
+          <li>Play a sound cue when a break starts and when it ends</li>
+        </ul>
+      </description>
+    </release>
     <release version="0.1.0" date="2026-06-17">
       <description translate="no">
         <p>Initial release.</p>
