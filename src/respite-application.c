@@ -308,6 +308,18 @@ respite_application_startup (GApplication *app)
 		                          G_CALLBACK (respite_application_autostart_changed),
 		                          self);
 
+	/* Reconcile the login-launch entry with the saved preference. We only ever
+	 * write it in response to the toggle changing, so if the portal-managed
+	 * autostart file is later lost (logout/cleanup/portal revalidation) the
+	 * preference stays "on" while login start is silently broken. Inside the
+	 * sandbox the file lives on the host and cannot be inspected directly, so we
+	 * simply re-assert the request: it is idempotent and, for an already-granted
+	 * permission, does not re-prompt. */
+	if (g_settings_get_boolean (self->settings, "autostart"))
+		respite_background_set_autostart (TRUE,
+		                                  respite_application_autostart_settled,
+		                                  self);
+
 	self->timer = respite_timer_new ();
 
 	g_signal_connect_swapped (self->timer, "warning",
