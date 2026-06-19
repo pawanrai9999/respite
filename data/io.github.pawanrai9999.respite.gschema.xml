@@ -41,5 +41,10 @@
 			<summary>Start Respite automatically on login</summary>
 			<description>Whether Respite runs as a background daemon when the user logs in.</description>
 		</key>
+		<key name="strict-break" type="b">
+			<default>false</default>
+			<summary>Strictly enforce breaks</summary>
+			<description>When enabled, breaks are enforced by the companion Respite GNOME Shell extension, which blocks Alt+Tab, the overview and app switching so the break cannot be worked through. Requires the extension to be installed and enabled.</description>
+		</key>
 	</schema>
 </schemalist>

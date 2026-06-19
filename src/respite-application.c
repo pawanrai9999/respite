@@ -24,6 +24,7 @@
 #include "respite-application.h"
 #include "respite-background.h"
 #include "respite-overlay.h"
+#include "respite-strict.h"
 #include "respite-timer.h"
 #include "respite-window.h"
 
@@ -33,6 +34,17 @@ struct _RespiteApplication
 
 	/* The single work/break engine, shared across every entry point. */
 	RespiteTimer  *timer;
+
+	/* Client for the companion GNOME Shell extension that enforces strict
+	 * breaks from inside the compositor. Always present; only acts when the
+	 * extension is installed and the strict-break preference is on. */
+	RespiteStrict *strict;
+
+	/* TRUE while the current break is being enforced by the extension rather
+	 * than the in-app GTK overlays. Determines where ticks are pushed, how the
+	 * break is torn down, and whether a dropped grab triggers an overlay
+	 * fallback. */
+	gboolean       break_is_strict;
 
 	/* App-level view of the preferences, used to act on the autostart toggle.
 	 * @autostart_changed_id is the ::changed::autostart handler, blocked while
@@ -287,6 +299,23 @@ respite_application_play_sound (RespiteApplication *self,
 	gtk_media_stream_play (stream);
 }
 
+/* Tear down whatever is covering the screen for the current break: end the
+ * extension lockdown if it was driving this break, drop the GTK overlays, and
+ * release the suspend/idle inhibitor. Idempotent, so it is safe on a normal
+ * break end, on an early end (escape), on pause, and during shutdown. */
+static void
+respite_application_end_active_break (RespiteApplication *self)
+{
+	if (self->break_is_strict)
+	{
+		respite_strict_end_break (self->strict);
+		self->break_is_strict = FALSE;
+	}
+
+	respite_application_hide_overlays (self);
+	respite_application_uninhibit (self);
+}
+
 static void
 respite_application_on_break_started (RespiteApplication *self)
 {
@@ -297,25 +326,66 @@ respite_application_on_break_started (RespiteApplication *self)
 	                                     RESPITE_WARNING_NOTIFICATION_ID);
 
 	respite_application_inhibit (self);
-	respite_application_show_overlays (self);
+
+	/* Prefer in-compositor enforcement when the user asked for it and the
+	 * extension is present; otherwise fall back to the best-effort GTK
+	 * overlays. A grab that cannot be taken is reported via ::released, which
+	 * brings the overlays up for the rest of the break. */
+	if (g_settings_get_boolean (self->settings, "strict-break") &&
+	    respite_strict_is_available (self->strict))
+	{
+		self->break_is_strict = TRUE;
+		respite_strict_start_break (self->strict,
+		                            respite_timer_get_remaining (self->timer));
+	}
+	else
+	{
+		respite_application_show_overlays (self);
+	}
 }
 
 static void
 respite_application_on_break_ended (RespiteApplication *self)
 {
-	respite_application_hide_overlays (self);
-	respite_application_uninhibit (self);
+	respite_application_end_active_break (self);
 	respite_application_play_sound (self, RESPITE_BREAK_END_SOUND);
 }
 
-/* Push the countdown to every live overlay. Outside a break the array is
- * empty, so working-phase ticks harmlessly do nothing. */
+/* Push the countdown to the active enforcement: the extension when strict,
+ * otherwise every live overlay. Outside a break neither is active, so
+ * working-phase ticks harmlessly do nothing. */
 static void
 respite_application_on_tick (RespiteApplication *self,
                              guint               remaining)
 {
+	if (self->break_is_strict)
+		respite_strict_update_remaining (self->strict, remaining);
+
 	for (guint i = 0; i < self->overlays->len; i++)
 		respite_overlay_set_remaining (self->overlays->pdata[i], remaining);
+}
+
+/* The extension lost (or never took) the grab mid-break. Fall back to the GTK
+ * overlays for the remainder so the break is still enforced as best it can be. */
+static void
+respite_application_on_strict_released (RespiteApplication *self)
+{
+	if (!self->break_is_strict)
+		return;
+
+	self->break_is_strict = FALSE;
+
+	if (respite_timer_get_state (self->timer) == RESPITE_TIMER_STATE_BREAK)
+		respite_application_show_overlays (self);
+}
+
+/* The user held Esc inside the lockdown: end the break early through the timer
+ * so phase/postpone state stays consistent (this in turn tears the break down
+ * via ::break-ended). */
+static void
+respite_application_on_strict_escape (RespiteApplication *self)
+{
+	respite_timer_end_break (self->timer);
 }
 
 /* The portal (or native fallback) has settled on an autostart state, which may
@@ -384,6 +454,13 @@ respite_application_startup (GApplication *app)
 	                          G_CALLBACK (respite_application_on_break_ended), self);
 	g_signal_connect_swapped (self->timer, "tick",
 	                          G_CALLBACK (respite_application_on_tick), self);
+
+	self->strict = respite_strict_new ();
+
+	g_signal_connect_swapped (self->strict, "released",
+	                          G_CALLBACK (respite_application_on_strict_released), self);
+	g_signal_connect_swapped (self->strict, "escape-requested",
+	                          G_CALLBACK (respite_application_on_strict_escape), self);
 }
 
 /* Stop the engine and drop the daemon hold. Idempotent so it can run from
@@ -394,8 +471,7 @@ respite_application_teardown (RespiteApplication *self)
 	if (self->timer != NULL)
 		respite_timer_stop (self->timer);
 
-	respite_application_hide_overlays (self);
-	respite_application_uninhibit (self);
+	respite_application_end_active_break (self);
 
 	if (self->held)
 	{
@@ -432,6 +508,12 @@ respite_application_set_active (RespiteApplication *self,
 	else
 	{
 		respite_timer_stop (self->timer);
+
+		/* Pausing mid-break must not leave the screen covered — and for a
+		 * strict break it must release the compositor grab promptly rather than
+		 * trapping the user behind a frozen countdown until the extension's
+		 * watchdog fires. */
+		respite_application_end_active_break (self);
 	}
 }
 
@@ -516,6 +598,7 @@ respite_application_dispose (GObject *object)
 
 	g_clear_pointer (&self->overlays, g_ptr_array_unref);
 	g_clear_pointer (&self->sounds, g_ptr_array_unref);
+	g_clear_object (&self->strict);
 	g_clear_object (&self->timer);
 	g_clear_object (&self->settings);
 
@@ -542,6 +625,14 @@ respite_application_get_timer (RespiteApplication *self)
 	g_return_val_if_fail (RESPITE_IS_APPLICATION (self), NULL);
 
 	return self->timer;
+}
+
+RespiteStrict *
+respite_application_get_strict (RespiteApplication *self)
+{
+	g_return_val_if_fail (RESPITE_IS_APPLICATION (self), NULL);
+
+	return self->strict;
 }
 
 static void

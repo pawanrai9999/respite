@@ -3,6 +3,7 @@ respite_sources = [
   'respite-application.c',
   'respite-background.c',
   'respite-overlay.c',
+  'respite-strict.c',
   'respite-timer.c',
   'respite-window.c',
 ]

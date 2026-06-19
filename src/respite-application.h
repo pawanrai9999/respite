@@ -22,6 +22,7 @@
 
 #include <adwaita.h>
 
+#include "respite-strict.h"
 #include "respite-timer.h"
 
 G_BEGIN_DECLS
@@ -30,8 +31,9 @@ G_BEGIN_DECLS
 
 G_DECLARE_FINAL_TYPE (RespiteApplication, respite_application, RESPITE, APPLICATION, AdwApplication)
 
-RespiteApplication *respite_application_new       (const char        *application_id,
-                                                   GApplicationFlags  flags);
-RespiteTimer       *respite_application_get_timer (RespiteApplication *self);
+RespiteApplication *respite_application_new        (const char        *application_id,
+                                                    GApplicationFlags  flags);
+RespiteTimer       *respite_application_get_timer  (RespiteApplication *self);
+RespiteStrict      *respite_application_get_strict (RespiteApplication *self);
 
 G_END_DECLS

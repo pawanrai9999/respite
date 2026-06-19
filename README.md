@@ -91,6 +91,32 @@ lock: it fullscreens on every monitor, grabs focus, and re-presents itself, but
 a determined user can still switch workspace or application from the keyboard.
 The point is to make skipping a break a deliberate act rather than a reflex.
 
+### Strict break enforcement (optional)
+For when a best-effort nudge isn't enough, Respite ships an optional **companion
+GNOME Shell extension** that enforces breaks from *inside* the compositor — the
+one place on Wayland that can actually block Alt+Tab, Super, the overview, and
+app switching. The daemon stays the brain (all timer logic lives in Respite);
+the extension is a dumb actuator that locks and unlocks on command over D-Bus.
+
+- Turn it on with **Strict Enforcement** in the settings window. The toggle is
+  greyed out with an install prompt unless the extension is installed and
+  enabled, so you can't switch on "strict" while still being able to work around
+  a break.
+- During a strict break, the screen blacks out and input is held by the shell;
+  Alt+Tab and friends do nothing.
+- **Emergency escape hatch: hold `Esc` for about 3 seconds** to end a strict
+  break early. There is no on-screen hint (that would weaken enforcement), but
+  the exit always exists.
+- It can't trap you: if the daemon stops driving the break for any reason, the
+  extension auto-releases the lock within ~10 seconds.
+- This is **not** a kiosk lock. Switching to a TTY (Ctrl+Alt+F2) or killing
+  `gnome-shell` always ends a break — unavoidable, and arguably correct.
+
+The extension is a separate artifact (it cannot live inside the Flatpak, since a
+sandboxed app cannot install Shell extensions into the live session). See
+[`extension/`](extension/) for installation; if it isn't installed, Respite
+falls back to the best-effort overlay above.
+
 ---
 
 ## Technology
@@ -217,6 +243,7 @@ code — commit your changes before building.
 - [x] Pre-break warning and limited postpone mechanism
 - [x] Background daemon + autostart on login
 - [x] Persisting user preferences
+- [x] Optional strict enforcement via a companion GNOME Shell extension
 
 ---
 

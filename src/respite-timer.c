@@ -234,6 +234,21 @@ respite_timer_stop (RespiteTimer *self)
 	set_state (self, RESPITE_TIMER_STATE_IDLE);
 }
 
+void
+respite_timer_end_break (RespiteTimer *self)
+{
+	g_return_if_fail (RESPITE_IS_TIMER (self));
+
+	/* Only an active break can be ended early (e.g. the strict-break escape
+	 * hatch); outside a break there is nothing to cut short. Hand off to the
+	 * normal BREAK -> WORKING transition so timer state stays consistent. */
+	if (self->state != RESPITE_TIMER_STATE_BREAK)
+		return;
+
+	g_signal_emit (self, signals[SIGNAL_BREAK_ENDED], 0);
+	begin_working (self);
+}
+
 gboolean
 respite_timer_postpone (RespiteTimer *self)
 {

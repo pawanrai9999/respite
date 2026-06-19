@@ -38,6 +38,10 @@ struct _RespiteWindow
 	 * is somehow built without an application. */
 	RespiteTimer        *timer;
 
+	/* The shared strict-break client, also borrowed from the application, so
+	 * the strict toggle can be gated on the extension actually being present. */
+	RespiteStrict       *strict;
+
 	/* Template widgets */
 	GtkImage            *status_icon;
 	AdwActionRow        *status_row;
@@ -50,6 +54,8 @@ struct _RespiteWindow
 	AdwSpinRow          *pre_break_warning_row;
 	AdwSwitchRow        *sound_effects_row;
 	AdwSwitchRow        *autostart_row;
+	AdwSwitchRow        *strict_break_row;
+	AdwActionRow        *strict_unavailable_row;
 };
 
 G_DEFINE_FINAL_TYPE (RespiteWindow, respite_window, ADW_TYPE_APPLICATION_WINDOW)
@@ -169,6 +175,27 @@ respite_window_on_state_changed (RespiteWindow     *self,
 	respite_window_refresh_status (self);
 }
 
+/* Gate the strict toggle on the extension being present: only sensitive when
+ * the helper owns its bus name, with an inline prompt to install it otherwise,
+ * so strict cannot be switched on while the user could still work through a
+ * break. Reflects the live state as the extension is enabled or disabled. */
+static void
+respite_window_refresh_strict (RespiteWindow *self)
+{
+	gboolean available = self->strict != NULL &&
+	                     respite_strict_is_available (self->strict);
+
+	gtk_widget_set_sensitive (GTK_WIDGET (self->strict_break_row), available);
+	gtk_widget_set_visible (GTK_WIDGET (self->strict_unavailable_row), !available);
+}
+
+static void
+respite_window_on_strict_availability_changed (RespiteWindow *self,
+                                               gboolean       available)
+{
+	respite_window_refresh_strict (self);
+}
+
 /* GtkWindow:application is not a construct property, so it is only set after
  * construction; wait for it here, then grab the shared timer and start
  * mirroring its state. The handlers auto-disconnect with the window, so the
@@ -194,7 +221,14 @@ respite_window_application_changed (GObject    *object,
 	                         G_CALLBACK (respite_window_on_state_changed),
 	                         self, G_CONNECT_SWAPPED);
 
+	self->strict = respite_application_get_strict (RESPITE_APPLICATION (app));
+
+	g_signal_connect_object (self->strict, "availability-changed",
+	                         G_CALLBACK (respite_window_on_strict_availability_changed),
+	                         self, G_CONNECT_SWAPPED);
+
 	respite_window_refresh_status (self);
+	respite_window_refresh_strict (self);
 }
 
 static void
@@ -227,6 +261,8 @@ respite_window_class_init (RespiteWindowClass *klass)
 	gtk_widget_class_bind_template_child (widget_class, RespiteWindow, pre_break_warning_row);
 	gtk_widget_class_bind_template_child (widget_class, RespiteWindow, sound_effects_row);
 	gtk_widget_class_bind_template_child (widget_class, RespiteWindow, autostart_row);
+	gtk_widget_class_bind_template_child (widget_class, RespiteWindow, strict_break_row);
+	gtk_widget_class_bind_template_child (widget_class, RespiteWindow, strict_unavailable_row);
 }
 
 static void
@@ -273,5 +309,8 @@ respite_window_init (RespiteWindow *self)
 	                 G_SETTINGS_BIND_DEFAULT);
 	g_settings_bind (self->settings, "autostart",
 	                 self->autostart_row, "active",
+	                 G_SETTINGS_BIND_DEFAULT);
+	g_settings_bind (self->settings, "strict-break",
+	                 self->strict_break_row, "active",
 	                 G_SETTINGS_BIND_DEFAULT);
 }
