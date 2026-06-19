@@ -17,7 +17,7 @@ jobs:
       options: --privileged
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Lint the Flathub manifest
         # Stricter, Flathub-specific checks (finish-args, module layout, pinned
@@ -33,7 +33,7 @@ jobs:
       options: --privileged
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Build against this checkout
         # The committed manifest pulls the tagged release from GitHub so it is
