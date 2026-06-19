@@ -231,15 +231,22 @@ export default class RespiteStrictExtension extends Extension {
                         return GLib.SOURCE_REMOVE;
                     });
             }
-        } else if (type === Clutter.EventType.KEY_RELEASE) {
+            return Clutter.EVENT_STOP;
+        }
+
+        if (type === Clutter.EventType.KEY_RELEASE) {
             if (event.get_key_symbol() === Clutter.KEY_Escape && this._escapeTimeoutId) {
                 GLib.source_remove(this._escapeTimeoutId);
                 this._escapeTimeoutId = 0;
             }
+            return Clutter.EVENT_STOP;
         }
 
-        /* Swallow everything while the break is enforced. */
-        return Clutter.EVENT_STOP;
+        /* Only swallow keyboard input (the modal grab already keeps everything
+         * else from reaching other windows). Crossing/motion events must keep
+         * propagating: stopping them trips a Clutter EVENT_PROPAGATE check and
+         * spams the journal. */
+        return Clutter.EVENT_PROPAGATE;
     }
 
     _teardown() {
