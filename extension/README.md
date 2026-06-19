@@ -46,6 +46,15 @@ undiscoverable exit is no exit in a real emergency.
 This is *not* a kiosk lock. Switching to a TTY (Ctrl+Alt+F2) or killing
 `gnome-shell` always exits a break — unavoidable, and arguably correct.
 
+## Lock screen
+
+The extension runs only in the normal `user` session mode, so locking the
+session (Super+L) disables it. On disable it cleanly releases the grab and
+emits `Released`, and the daemon falls back to its in-app overlay for the rest
+of the break — the lock screen takes over while locked, and after unlocking you
+see the remaining break through the fallback overlay (or nothing, if the break
+finished while locked). The timer counts down throughout either way.
+
 ## Install (development)
 
 The extension cannot ship inside the Respite Flatpak — sandboxed apps cannot

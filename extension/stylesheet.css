@@ -1,11 +1,18 @@
-/* SPDX-License-Identifier: AGPL-3.0-or-later */
+/* SPDX-License-Identifier: AGPL-3.0-or-later
+ *
+ * Matches the in-app GTK break overlay (src/respite-overlay.css) so the strict
+ * and best-effort breaks look the same. */
 
 .respite-strict-overlay {
-    background-color: rgb(0, 0, 0);
+    background-color: black;
 }
 
+/* A large, legible countdown. A dimmed near-white keeps it readable against
+ * the true-black field without the harshness of pure white at this size;
+ * tabular figures stop the countdown jittering as the digits change. */
 .respite-strict-countdown {
-    color: rgb(235, 235, 235);
-    font-size: 48pt;
+    color: #dddddd;
+    font-size: 96px;
     font-weight: bold;
+    font-feature-settings: "tnum";
 }
