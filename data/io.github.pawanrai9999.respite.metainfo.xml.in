@@ -59,6 +59,14 @@
   </branding>
 
   <releases>
+    <release version="0.3.0" date="2026-06-19">
+      <description translate="no">
+        <ul>
+          <li>Optional strict break enforcement via a companion GNOME Shell extension that blocks Alt+Tab, the overview and app switching during a break</li>
+          <li>Hold Esc to end a strict break early</li>
+        </ul>
+      </description>
+    </release>
     <release version="0.2.0" date="2026-06-18">
       <description translate="no">
         <ul>
