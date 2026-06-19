@@ -1,0 +1,8 @@
+{
+  "uuid": "respite-strict-break@pawanrai9999.github.io",
+  "name": "Respite Strict Break",
+  "description": "Companion actuator for the Respite break reminder. When Respite starts a strict break it asks this extension to black out the screen and take a modal grab inside gnome-shell, suppressing Alt+Tab, Super and the overview so the break cannot be worked through. Hold Esc for 3 seconds as an emergency escape. All timer logic lives in the Respite daemon; this extension only locks and unlocks on its command over D-Bus.",
+  "shell-version": ["45", "46", "47", "48", "49", "50"],
+  "url": "https://github.com/pawanrai9999/Respite",
+  "version-name": "0.1.0"
+}

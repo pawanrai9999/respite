@@ -1,0 +1,46 @@
+<!DOCTYPE node PUBLIC "-//freedesktop//DTD D-BUS Object Introspection 1.0//EN"
+ "http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd">
+<!--
+  Strict-break enforcement contract.
+
+  This file is the single source of truth for the D-Bus interface shared
+  between the Respite daemon (the brain, in C) and this GNOME Shell extension
+  (the actuator, in JS). The extension owns the well-known name and exports
+  this interface; the daemon consumes it. Keep both sides in sync by editing
+  only this file.
+-->
+<node>
+  <interface name="io.github.pawanrai9999.respite.Strict">
+    <!-- Begin a lockdown: black out every monitor and show the countdown.
+         Returns FALSE if the modal grab could not be acquired (e.g. another
+         system modal already holds the shell), in which case the daemon falls
+         back to its in-app GTK overlay for this break. -->
+    <method name="StartBreak">
+      <arg type="u" name="seconds" direction="in"/>
+      <arg type="b" name="started" direction="out"/>
+    </method>
+
+    <!-- Refresh the countdown text during an active break. -->
+    <method name="UpdateRemaining">
+      <arg type="u" name="seconds" direction="in"/>
+    </method>
+
+    <!-- Release the grab and remove the overlay. -->
+    <method name="EndBreak"/>
+
+    <!-- Presence and capability/version handshake. Returns the extension's
+         version string. -->
+    <method name="Ping">
+      <arg type="s" name="version" direction="out"/>
+    </method>
+
+    <!-- Enforcement dropped unexpectedly (grab lost, extension disabled, or
+         GNOME reloaded mid-break). The daemon should fall back to its GTK
+         overlay for the remainder of the break. -->
+    <signal name="Released"/>
+
+    <!-- The user invoked the emergency escape hatch (hold Esc). The daemon
+         treats this as an early end of the break. -->
+    <signal name="EscapeRequested"/>
+  </interface>
+</node>

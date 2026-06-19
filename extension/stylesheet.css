@@ -1,0 +1,11 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+
+.respite-strict-overlay {
+    background-color: rgb(0, 0, 0);
+}
+
+.respite-strict-countdown {
+    color: rgb(235, 235, 235);
+    font-size: 48pt;
+    font-weight: bold;
+}
